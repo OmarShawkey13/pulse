@@ -80,7 +80,7 @@ lib/
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/yourusername/pulse.git
+    git clone https://github.com/omarshawkey13/pulse.git
     cd pulse
     ```
 
@@ -112,7 +112,11 @@ Ensure your `AndroidManifest.xml` includes:
 
 ## 📸 Screenshots
 
-*(Add your screenshots here)*
+<p align="center">
+  <img src="https://raw.githubusercontent.com/OmarShawkey13/pulse/main/screenshoot/app_screenshoot.png"
+       alt="Pulse Music App Showcase"
+       width="90%" />
+</p>
 
 ## 📄 License
 
