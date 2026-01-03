@@ -51,3 +51,6 @@ class HomeLoadSongsErrorState extends HomeStates {
   final String error;
   HomeLoadSongsErrorState(this.error);
 }
+
+//palette
+class HomeWaveColorUpdated extends HomeStates {}

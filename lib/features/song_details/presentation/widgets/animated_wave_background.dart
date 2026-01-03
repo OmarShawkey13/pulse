@@ -1,5 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pulse/core/utils/cubit/home_cubit.dart';
+import 'package:pulse/core/utils/cubit/home_state.dart';
 
 class AnimatedWaveBackground extends StatefulWidget {
   const AnimatedWaveBackground({super.key});
@@ -29,46 +32,65 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
+    return BlocBuilder<HomeCubit, HomeStates>(
+      buildWhen: (prev, curr) => curr is HomeWaveColorUpdated,
+      builder: (context, state) {
+        final waveColor =
+            homeCubit.waveColor ?? Theme.of(context).colorScheme.primary;
+        final isLight = waveColor.computeLuminance() > 0.5;
+        final wavePainterColor = isLight ? Colors.black : Colors.white;
 
-    return Stack(
-      children: [
-        // Base background
-        Container(
-          color: Theme.of(context).scaffoldBackgroundColor,
-        ),
-
-        // Animated waves
-        AnimatedBuilder(
-          animation: _controller,
-          builder: (_, _) {
-            return CustomPaint(
-              size: Size.infinite,
-              painter: _WavePainter(
-                animationValue: _controller.value,
-                color: primaryColor,
+        return Stack(
+          children: [
+            // Base background with smooth transition
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeInOut,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    waveColor.withValues(alpha: 0.6),
+                    waveColor,
+                  ],
+                ),
               ),
-            );
-          },
-        ),
-
-        // Gradient overlay (for readability)
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                primaryColor.withValues(alpha: 0.15),
-                Theme.of(
-                  context,
-                ).scaffoldBackgroundColor.withValues(alpha: 0.7),
-                Theme.of(context).scaffoldBackgroundColor,
-              ],
             ),
-          ),
-        ),
-      ],
+
+            // Animated waves
+            AnimatedBuilder(
+              animation: _controller,
+              builder: (_, _) {
+                return CustomPaint(
+                  size: Size.infinite,
+                  painter: _WavePainter(
+                    animationValue: _controller.value,
+                    color: wavePainterColor,
+                  ),
+                );
+              },
+            ),
+
+            // Gradient overlay (for readability)
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Theme.of(
+                      context,
+                    ).scaffoldBackgroundColor.withValues(alpha: 0.5),
+                    Theme.of(context).scaffoldBackgroundColor,
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -87,15 +109,15 @@ class _WavePainter extends CustomPainter {
     final paint = Paint()..style = PaintingStyle.fill;
 
     // Wave 1
-    paint.color = color.withValues(alpha: 0.20);
+    paint.color = color.withValues(alpha: 0.10);
     _drawWave(canvas, size, paint, frequency: 1.0, phase: 0);
 
     // Wave 2
-    paint.color = color.withValues(alpha: 0.30);
+    paint.color = color.withValues(alpha: 0.15);
     _drawWave(canvas, size, paint, frequency: 0.8, phase: 2);
 
     // Wave 3
-    paint.color = color.withValues(alpha: 0.15);
+    paint.color = color.withValues(alpha: 0.08);
     _drawWave(canvas, size, paint, frequency: 1.2, phase: 4);
   }
 
@@ -134,6 +156,7 @@ class _WavePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _WavePainter oldDelegate) {
-    return oldDelegate.animationValue != animationValue;
+    return oldDelegate.animationValue != animationValue ||
+        oldDelegate.color != color;
   }
 }

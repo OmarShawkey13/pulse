@@ -21,9 +21,7 @@ class SongArtwork extends StatelessWidget {
           (e) => e.path == currentPath,
           orElse: () => cubit.songs.first,
         );
-
         final primaryColor = Theme.of(context).primaryColor;
-
         return Container(
           height: 300,
           width: 300,

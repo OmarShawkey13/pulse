@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pulse/core/di/injections.dart';
 import 'package:pulse/core/models/song_model.dart';
 import 'package:pulse/core/network/local/cache_helper.dart';
+import 'package:pulse/core/network/service/palette_service.dart';
 import 'package:pulse/core/network/service/pulse_audio_handler.dart';
 import 'package:pulse/core/utils/cubit/home_state.dart';
 import 'package:pulse/main.dart';
@@ -74,6 +75,7 @@ class HomeCubit extends Cubit<HomeStates> {
     }
 
     await _audioHandler.play();
+    await loadWavePalette();
     emit(HomePlayerPlayState(path));
   }
 
@@ -81,6 +83,7 @@ class HomeCubit extends Cubit<HomeStates> {
     if (!hasNext) return;
     _currentIndex++;
     await _playCurrentIndex();
+    await loadWavePalette();
     emit(HomePlayerNextState(_queue[_currentIndex]));
   }
 
@@ -88,6 +91,7 @@ class HomeCubit extends Cubit<HomeStates> {
     if (!hasPrevious) return;
     _currentIndex--;
     await _playCurrentIndex();
+    await loadWavePalette();
     emit(HomePlayerPreviousState(_queue[_currentIndex]));
   }
 
@@ -116,7 +120,7 @@ class HomeCubit extends Cubit<HomeStates> {
   // Data Loading
   Future<void> loadSongs({bool retry = false}) async {
     emit(HomeLoadSongsLoadingState());
-    
+
     try {
       // نقل طلب الصلاحية داخل الـ try-catch لمنع حدوث Crash
       final hasPermission = await _audioQuery.checkAndRequest(
@@ -199,10 +203,35 @@ class HomeCubit extends Cubit<HomeStates> {
           id: song.id,
         );
 
-        if (lastPositionSeconds is int)
+        if (lastPositionSeconds is int) {
           await _audioHandler.seek(Duration(seconds: lastPositionSeconds));
+        }
         emit(HomePlayerPauseState());
       }
     }
+  }
+
+  Color? waveColor;
+
+  Future<void> loadWavePalette() async {
+    if (currentSongPath == null) return;
+
+    final song = songs.firstWhere(
+      (e) => e.path == currentSongPath,
+      orElse: () => songs.first,
+    );
+
+    final bytes = await _audioQuery.queryArtwork(
+      song.id,
+      audio.ArtworkType.AUDIO,
+      quality: 100,
+    );
+
+    if (bytes == null) return;
+
+    final color = await PaletteService.extractDominantColorFromBytes(bytes);
+
+    waveColor = color;
+    emit(HomeWaveColorUpdated());
   }
 }
