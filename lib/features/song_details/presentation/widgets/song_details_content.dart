@@ -20,7 +20,7 @@ class SongDetailsContent extends StatelessWidget {
           state is HomePlayerNextState ||
           state is HomePlayerPreviousState,
       builder: (context, state) {
-        final cubit = context.read<HomeCubit>();
+        final cubit = homeCubit;
         final currentPath = cubit.currentSongPath;
 
         if (currentPath == null || cubit.songs.isEmpty) {
@@ -31,23 +31,32 @@ class SongDetailsContent extends StatelessWidget {
           (e) => e.path == currentPath,
           orElse: () => cubit.songs.first,
         );
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              const Spacer(),
-              const SongArtwork(),
-              const Spacer(),
-              SongTitleSection(song: song),
-              verticalSpace32,
-              const SongSeekBar(),
-              verticalSpace24,
-              SongControls(
-                songPath: song.path,
+
+        return CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    const Spacer(),
+                    const SongArtwork(),
+                    const Spacer(),
+                    SongTitleSection(song: song),
+                    verticalSpace32,
+                    const SongSeekBar(),
+                    verticalSpace24,
+                    SongControls(
+                      songPath: song.path,
+                    ),
+                    const Spacer(flex: 2),
+                  ],
+                ),
               ),
-              const Spacer(flex: 2),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );

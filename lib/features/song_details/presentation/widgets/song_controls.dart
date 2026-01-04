@@ -20,7 +20,6 @@ class SongControls extends StatelessWidget {
       stream: cubit.playbackStateStream,
       builder: (context, snapshot) {
         final playing = snapshot.data?.playing ?? false;
-
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

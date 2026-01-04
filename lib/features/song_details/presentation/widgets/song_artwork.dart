@@ -15,7 +15,7 @@ class SongArtwork extends StatelessWidget {
           state is HomePlayerNextState ||
           state is HomePlayerPreviousState,
       builder: (context, state) {
-        final cubit = context.read<HomeCubit>();
+        final cubit = homeCubit;
         final currentPath = cubit.currentSongPath;
         final song = cubit.songs.firstWhere(
           (e) => e.path == currentPath,

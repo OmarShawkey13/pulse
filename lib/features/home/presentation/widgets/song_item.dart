@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:on_audio_query_pluse/on_audio_query.dart' hide SongModel;
 import 'package:pulse/core/models/song_model.dart';
-import 'package:pulse/core/utils/constants/routes.dart';
 import 'package:pulse/core/utils/cubit/home_cubit.dart';
-import 'package:pulse/core/utils/extensions/context_extension.dart';
 
 class SongItem extends StatelessWidget {
   final SongModel song;
@@ -55,13 +53,11 @@ class SongItem extends StatelessWidget {
               homeCubit.pauseSong();
             } else {
               homeCubit.playSong(song.path);
-              context.push<Object>(Routes.songDetails);
             }
           },
         ),
         onTap: () {
           homeCubit.playSong(song.path);
-          context.push<Object>(Routes.songDetails);
         },
       ),
     );

@@ -4,14 +4,16 @@ import 'package:pulse/features/song_details/presentation/widgets/animated_wave_b
 import 'package:pulse/features/song_details/presentation/widgets/song_details_content.dart';
 
 class SongDetailsScreen extends StatelessWidget {
-  const SongDetailsScreen({super.key});
+  final VoidCallback? onClose;
+
+  const SongDetailsScreen({super.key, this.onClose});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: _SongDetailsAppBar(),
-      body: Stack(
+      appBar: _SongDetailsAppBar(onClose: onClose),
+      body: const Stack(
         children: [
           AnimatedWaveBackground(),
           SafeArea(
@@ -25,7 +27,9 @@ class SongDetailsScreen extends StatelessWidget {
 
 class _SongDetailsAppBar extends StatelessWidget
     implements PreferredSizeWidget {
-  const _SongDetailsAppBar();
+  final VoidCallback? onClose;
+
+  const _SongDetailsAppBar({this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +38,13 @@ class _SongDetailsAppBar extends StatelessWidget
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 35),
-        onPressed: () => context.pop,
+        onPressed: () {
+          if (onClose != null) {
+            onClose!();
+          } else {
+            context.pop;
+          }
+        },
       ),
     );
   }
