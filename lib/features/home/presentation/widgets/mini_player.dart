@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pulse/core/utils/cubit/home_cubit.dart';
 import 'package:pulse/core/utils/cubit/home_state.dart';
@@ -29,7 +30,7 @@ class _MiniPlayerState extends State<MiniPlayer>
     _controller =
         AnimationController(
           vsync: this,
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 450),
         )..addListener(() {
           widget.onExpansionChanged?.call(_controller.value);
         });
@@ -52,84 +53,101 @@ class _MiniPlayerState extends State<MiniPlayer>
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HomeCubit, HomeStates>(
-      buildWhen: (_, state) =>
-          state is HomePlayerPlayState ||
-          state is HomePlayerPauseState ||
-          state is HomePlayerNextState ||
-          state is HomePlayerPreviousState ||
-          state is HomePlayerStopState,
-      builder: (context, state) {
-        final cubit = homeCubit;
-        final songPath = cubit.currentSongPath;
-
-        if (songPath == null || cubit.songs.isEmpty) {
-          if (_controller.value > 0) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _controller.value = 0;
-              widget.onExpansionChanged?.call(0);
-            });
-          }
-          return const SizedBox.shrink();
+    return PopScope(
+      canPop: false, // إحنا اللي هنقرر
+      onPopInvokedWithResult: (didPop, result) async {
+        // لو الـ MiniPlayer مفتوح
+        if (_controller.value > 0.1) {
+          _controller.animateTo(
+            0,
+            duration: const Duration(milliseconds: 450),
+            curve: Curves.easeOut,
+          );
+        } else {
+          // لو مقفول → اقفل التطبيق
+          SystemNavigator.pop();
         }
+      },
+      child: BlocBuilder<HomeCubit, HomeStates>(
+        buildWhen: (_, state) =>
+            state is HomePlayerPlayState ||
+            state is HomePlayerPauseState ||
+            state is HomePlayerNextState ||
+            state is HomePlayerPreviousState ||
+            state is HomePlayerStopState,
+        builder: (context, state) {
+          final cubit = homeCubit;
+          final songPath = cubit.currentSongPath;
 
-        final song = cubit.songs.firstWhere(
-          (e) => e.path == songPath,
-          orElse: () => cubit.songs.first,
-        );
+          if (songPath == null || cubit.songs.isEmpty) {
+            if (_controller.value > 0) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _controller.value = 0;
+                widget.onExpansionChanged?.call(0);
+              });
+            }
+            return const SizedBox.shrink();
+          }
 
-        return AnimatedBuilder(
-          animation: _controller,
-          builder: (_, _) {
-            final value = _controller.value;
-            return MiniPlayerGestureWrapper(
-              controller: _controller,
-              minHeight: _minHeight,
-              maxHeight: _maxHeight,
-              child: MiniPlayerContainer(
-                value: value,
+          final song = cubit.songs.firstWhere(
+            (e) => e.path == songPath,
+            orElse: () => cubit.songs.first,
+          );
+
+          return AnimatedBuilder(
+            animation: _controller,
+            builder: (_, _) {
+              final value = _controller.value;
+              return MiniPlayerGestureWrapper(
+                controller: _controller,
                 minHeight: _minHeight,
                 maxHeight: _maxHeight,
-                child: Stack(
-                  children: [
-                    /// Full Player
-                    if (_maxHeight > 0)
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: _maxHeight,
-                        child: Opacity(
-                          opacity: value,
-                          child: IgnorePointer(
-                            ignoring: value < 0.5,
-                            child: SongDetailsScreen(
-                              onClose: () => _controller.animateTo(
-                                0,
-                                curve: Curves.easeOut,
+                child: MiniPlayerContainer(
+                  value: value,
+                  minHeight: _minHeight,
+                  maxHeight: _maxHeight,
+                  child: Stack(
+                    children: [
+                      /// Full Player
+                      if (_maxHeight > 0)
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: _maxHeight,
+                          child: Opacity(
+                            opacity: value,
+                            child: IgnorePointer(
+                              ignoring: value < 0.5,
+                              child: SongDetailsScreen(
+                                onClose: () => _controller.animateTo(
+                                  0,
+                                  duration: const Duration(milliseconds: 450),
+                                  curve: Curves.fastLinearToSlowEaseIn,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
 
-                    /// Mini Player
-                    Opacity(
-                      opacity: (1 - value * 3).clamp(0.0, 1.0),
-                      child: IgnorePointer(
-                        ignoring: value > 0,
-                        child: MiniPlayerContent(
-                          song: song,
+                      /// Mini Player
+                      Opacity(
+                        opacity: (1 - value * 3).clamp(0.0, 1.0),
+                        child: IgnorePointer(
+                          ignoring: value > 0,
+                          child: MiniPlayerContent(
+                            song: song,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
-        );
-      },
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

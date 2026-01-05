@@ -5,7 +5,6 @@ import 'package:pulse/core/utils/cubit/home_cubit.dart';
 import 'package:pulse/core/utils/cubit/home_state.dart';
 import 'package:pulse/features/home/presentation/widgets/home_error_widget.dart';
 import 'package:pulse/features/home/presentation/widgets/song_item_loading.dart';
-import 'package:pulse/features/home/presentation/widgets/songs_count_header.dart';
 import 'package:pulse/features/home/presentation/widgets/songs_list.dart';
 
 class HomeContent extends StatelessWidget {
@@ -27,13 +26,7 @@ class HomeContent extends StatelessWidget {
             itemBuilder: (_, _) => const SongItemLoading(),
           ),
           errorState: homeCubit.songs.isEmpty,
-          successBuilder: (_) => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SongsCountHeader(count: homeCubit.songs.length),
-              const Expanded(child: SongsList()),
-            ],
-          ),
+          successBuilder: (_) => const SongsList(),
           errorBuilder: (_) => const HomeErrorWidget(error: 'No songs found'),
         );
       },

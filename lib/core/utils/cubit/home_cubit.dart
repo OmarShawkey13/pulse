@@ -17,6 +17,7 @@ class HomeCubit extends Cubit<HomeStates> {
   final audio.OnAudioQuery _audioQuery = audio.OnAudioQuery();
 
   PulseAudioHandler get audioHandler => _audioHandler;
+
   static HomeCubit get(BuildContext context) => BlocProvider.of(context);
 
   HomeCubit() : super(HomeInitialState());
@@ -29,13 +30,18 @@ class HomeCubit extends Cubit<HomeStates> {
 
   // Getters
   bool get isDarkMode => _isDarkMode;
+
   bool get hasNext => _currentIndex < _queue.length - 1;
+
   bool get hasPrevious => _currentIndex > 0;
+
   String? get currentSongPath =>
       (_currentIndex >= 0 && _currentIndex < _queue.length)
       ? _queue[_currentIndex]
       : null;
+
   Stream<Duration> get positionStream => AudioService.position;
+
   Stream<PlaybackState> get playbackStateStream => _audioHandler.playbackState;
 
   // Theme
@@ -62,9 +68,21 @@ class HomeCubit extends Cubit<HomeStates> {
 
   Future<void> playSong(String path) async {
     final index = _queue.indexOf(path);
-    if (index != -1) _currentIndex = index;
+    if (index == -1) return;
+
+    _currentIndex = index;
+
+    // Reset color to avoid showing previous song's color
+    waveColor = null;
+    emit(HomeWaveColorUpdated());
+
+    emit(HomePlayerPlayState(path));
+
+    // Load palette
+    loadWavePalette();
 
     final song = _getSongDetails(path);
+
     if (_audioHandler.mediaItem.value?.id != path) {
       await _audioHandler.setSong(
         path,
@@ -75,23 +93,31 @@ class HomeCubit extends Cubit<HomeStates> {
     }
 
     await _audioHandler.play();
-    await loadWavePalette();
-    emit(HomePlayerPlayState(path));
   }
 
   Future<void> playNext() async {
     if (!hasNext) return;
     _currentIndex++;
+
+    waveColor = null;
+    emit(HomeWaveColorUpdated());
+
+    loadWavePalette();
+
     await _playCurrentIndex();
-    await loadWavePalette();
     emit(HomePlayerNextState(_queue[_currentIndex]));
   }
 
   Future<void> playPrevious() async {
     if (!hasPrevious) return;
     _currentIndex--;
+
+    waveColor = null;
+    emit(HomeWaveColorUpdated());
+
+    loadWavePalette();
+
     await _playCurrentIndex();
-    await loadWavePalette();
     emit(HomePlayerPreviousState(_queue[_currentIndex]));
   }
 
@@ -122,7 +148,6 @@ class HomeCubit extends Cubit<HomeStates> {
     emit(HomeLoadSongsLoadingState());
 
     try {
-      // نقل طلب الصلاحية داخل الـ try-catch لمنع حدوث Crash
       final hasPermission = await _audioQuery.checkAndRequest(
         retryRequest: retry,
       );
@@ -203,6 +228,8 @@ class HomeCubit extends Cubit<HomeStates> {
           id: song.id,
         );
 
+        await loadWavePalette();
+
         if (lastPositionSeconds is int) {
           await _audioHandler.seek(Duration(seconds: lastPositionSeconds));
         }
@@ -216,22 +243,34 @@ class HomeCubit extends Cubit<HomeStates> {
   Future<void> loadWavePalette() async {
     if (currentSongPath == null) return;
 
-    final song = songs.firstWhere(
-      (e) => e.path == currentSongPath,
-      orElse: () => songs.first,
-    );
+    try {
+      final song = songs.firstWhere(
+        (e) => e.path == currentSongPath,
+        orElse: () => songs.first,
+      );
 
-    final bytes = await _audioQuery.queryArtwork(
-      song.id,
-      audio.ArtworkType.AUDIO,
-      quality: 100,
-    );
+      final bytes = await _audioQuery.queryArtwork(
+        song.id,
+        audio.ArtworkType.AUDIO,
+        quality: 100,
+      );
 
-    if (bytes == null) return;
+      if (bytes == null) {
+        if (waveColor != null) {
+          waveColor = null;
+          emit(HomeWaveColorUpdated());
+        }
+        return;
+      }
 
-    final color = await PaletteService.extractDominantColorFromBytes(bytes);
+      final color = await PaletteService.extractDominantColorFromBytes(bytes);
 
-    waveColor = color;
-    emit(HomeWaveColorUpdated());
+      waveColor = color;
+      emit(HomeWaveColorUpdated());
+    } catch (e) {
+      debugPrint('Error loading palette: $e');
+      waveColor = null;
+      emit(HomeWaveColorUpdated());
+    }
   }
 }

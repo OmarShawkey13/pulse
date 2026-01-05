@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pulse/core/theme/colors.dart';
+import 'package:pulse/core/theme/text_styles.dart';
 import 'package:pulse/core/utils/constants/spacing.dart';
 import 'package:pulse/core/utils/cubit/home_cubit.dart';
 
@@ -16,7 +17,10 @@ class HomeErrorWidget extends StatelessWidget {
         children: [
           const Icon(Icons.error_outline, size: 60, color: ColorsManager.error),
           verticalSpace12,
-          const Text('Oops!', style: TextStyle(fontSize: 20)),
+          Text(
+            'Oops!',
+            style: TextStylesManager.regular20,
+          ),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Text(

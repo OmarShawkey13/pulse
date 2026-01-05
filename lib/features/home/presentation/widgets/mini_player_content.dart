@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pulse/core/models/song_model.dart';
+import 'package:pulse/core/theme/text_styles.dart';
+import 'package:pulse/core/utils/constants/spacing.dart';
 import 'package:pulse/features/home/presentation/widgets/mini_player_artwork.dart';
 import 'package:pulse/features/home/presentation/widgets/mini_player_controls.dart';
 
@@ -25,7 +27,7 @@ class MiniPlayerContent extends StatelessWidget {
       child: Row(
         children: [
           MiniPlayerArtwork(song: song),
-          const SizedBox(width: 12),
+          horizontalSpace12,
           Expanded(child: _SongInfo(song: song)),
           MiniPlayerControls(
             songPath: song.path,
@@ -52,18 +54,14 @@ class _SongInfo extends StatelessWidget {
           song.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStylesManager.bold14,
         ),
-        const SizedBox(height: 2),
+        verticalSpace2,
         Text(
           song.artist,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 12,
+          style: TextStylesManager.regular12.copyWith(
             color: Colors.grey.shade400,
           ),
         ),

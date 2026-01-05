@@ -1,5 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
+import 'package:pulse/core/theme/text_styles.dart';
 import 'package:pulse/core/utils/cubit/home_cubit.dart';
 
 class SongSeekBar extends StatelessWidget {
@@ -60,7 +61,9 @@ class _DurationText extends StatelessWidget {
 
     return Text(
       '$m:$s',
-      style: const TextStyle(color: Colors.white70, fontSize: 12),
+      style: TextStylesManager.regular12.copyWith(
+        color: Colors.white70,
+      ),
     );
   }
 }

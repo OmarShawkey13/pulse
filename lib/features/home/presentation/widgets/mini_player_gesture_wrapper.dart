@@ -18,10 +18,12 @@ class MiniPlayerGestureWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        if (controller.value > 0.5) {
-          controller.animateTo(0, curve: Curves.easeOut);
-        } else {
-          controller.animateTo(1, curve: Curves.easeOut);
+        if (controller.value <= 0.5) {
+          controller.animateTo(
+            1,
+            duration: const Duration(milliseconds: 450),
+            curve: Curves.fastLinearToSlowEaseIn,
+          );
         }
       },
       onVerticalDragUpdate: (details) {
@@ -29,15 +31,32 @@ class MiniPlayerGestureWrapper extends StatelessWidget {
       },
       onVerticalDragEnd: (details) {
         final double velocity = details.primaryVelocity ?? 0;
-        if (velocity < -500) {
-          controller.animateTo(1, curve: Curves.easeOut);
-        } else if (velocity > 500) {
-          controller.animateTo(0, curve: Curves.easeOut);
+
+        if (velocity < -700) {
+          controller.animateTo(
+            1,
+            duration: const Duration(milliseconds: 450),
+            curve: Curves.fastLinearToSlowEaseIn,
+          );
+        } else if (velocity > 700) {
+          controller.animateTo(
+            0,
+            duration: const Duration(milliseconds: 450),
+            curve: Curves.fastLinearToSlowEaseIn,
+          );
         } else {
-          if (controller.value > 0.5) {
-            controller.animateTo(1, curve: Curves.easeOut);
+          if (controller.value > 0.4) {
+            controller.animateTo(
+              1,
+              duration: const Duration(milliseconds: 450),
+              curve: Curves.fastLinearToSlowEaseIn,
+            );
           } else {
-            controller.animateTo(0, curve: Curves.easeOut);
+            controller.animateTo(
+              0,
+              duration: const Duration(milliseconds: 450),
+              curve: Curves.fastLinearToSlowEaseIn,
+            );
           }
         }
       },

@@ -16,11 +16,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final audioHandler = await AudioService.init(
     builder: () => PulseAudioHandler(),
-    config: AudioServiceConfig(
+    config: const AudioServiceConfig(
       androidNotificationChannelId: 'com.pulse.music.playback',
       androidNotificationChannelName: 'Pulse Music',
       androidNotificationOngoing: true,
-      androidStopForegroundOnPause: false,
       androidResumeOnClick: true,
       androidNotificationClickStartsActivity: true,
       androidShowNotificationBadge: false,

@@ -23,7 +23,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onPlayerExpansionChanged(double expansionValue) {
-    // Hide AppBar when player is expanded more than 80%
     final isExpanded = expansionValue > 0.8;
     if (_isPlayerExpanded != isExpanded) {
       setState(() {
