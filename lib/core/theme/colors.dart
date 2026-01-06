@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 class ColorsManager {
   // -------- BRAND / CORE -------- //
-  static const Color primary = Color(0xFF5B6CFF);   // Indigo Pulse
+  static const Color primary = Color(0xFF5B6CFF); // Indigo Pulse
   static const Color secondary = Color(0xFF8B7CFF); // Soft Violet
-  static const Color accent = Color(0xFF22E1D3);    // Cyan Pulse
+  static const Color accent = Color(0xFF22E1D3); // Cyan Pulse
 
   // -------- LIGHT THEME -------- //
   static const Color lightBackground = Color(0xFFF5F7FB);

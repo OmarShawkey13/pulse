@@ -7,6 +7,7 @@ class PulseAudioHandler extends BaseAudioHandler {
   // Callbacks for external logic (e.g., Cubit)
   Future<void> Function()? onSkipToNext;
   Future<void> Function()? onSkipToPrevious;
+  Future<void> Function()? onSongFinished;
 
   PulseAudioHandler() {
     _player.playbackEventStream.listen(_broadcastState);
@@ -22,7 +23,9 @@ class PulseAudioHandler extends BaseAudioHandler {
     // Listen for playback completion
     _player.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
-        skipToNext();
+        if (onSongFinished != null) {
+          onSongFinished!();
+        }
       }
     });
   }
@@ -90,6 +93,22 @@ class PulseAudioHandler extends BaseAudioHandler {
   // ⏩ SEEK
   @override
   Future<void> seek(Duration position) => _player.seek(position);
+
+  // 🔁 REPEAT MODE
+  @override
+  Future<void> setRepeatMode(AudioServiceRepeatMode repeatMode) async {
+    // When updating the state manually, we must update the position to the current one.
+    // Otherwise, it uses the stale position from the last event, causing the seekbar to jump back.
+    playbackState.add(
+      playbackState.value.copyWith(
+        repeatMode: repeatMode,
+        updatePosition: _player.position,
+        bufferedPosition: _player.bufferedPosition,
+      ),
+    );
+    // Always set to off to handle repeat logic manually in the Cubit
+    await _player.setLoopMode(LoopMode.off);
+  }
 
   Future<void> setSong(
     String path, {

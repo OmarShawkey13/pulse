@@ -23,8 +23,8 @@ class SongArtwork extends StatelessWidget {
         );
         final primaryColor = Theme.of(context).primaryColor;
         return Container(
-          height: 300,
-          width: 300,
+          height: 250,
+          width: 250,
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.1),
             shape: BoxShape.circle,

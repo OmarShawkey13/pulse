@@ -7,12 +7,14 @@ class SongItem extends StatelessWidget {
   final SongModel song;
   final bool isPlaying;
   final bool loadArtwork;
+  final List<String>? queue;
 
   const SongItem({
     super.key,
     required this.song,
     required this.isPlaying,
     this.loadArtwork = true,
+    this.queue,
   });
 
   @override
@@ -52,12 +54,12 @@ class SongItem extends StatelessWidget {
             if (isPlaying) {
               homeCubit.pauseSong();
             } else {
-              homeCubit.playSong(song.path);
+              homeCubit.playSong(song.path, queue: queue);
             }
           },
         ),
         onTap: () {
-          homeCubit.playSong(song.path);
+          homeCubit.playSong(song.path, queue: queue);
         },
       ),
     );

@@ -1,7 +1,9 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
-import 'package:pulse/core/utils/constants/spacing.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pulse/core/models/song_model.dart';
 import 'package:pulse/core/utils/cubit/home_cubit.dart';
+import 'package:pulse/core/utils/cubit/home_state.dart';
 
 class SongControls extends StatelessWidget {
   final String songPath;
@@ -20,9 +22,24 @@ class SongControls extends StatelessWidget {
       stream: cubit.playbackStateStream,
       builder: (context, snapshot) {
         final playing = snapshot.data?.playing ?? false;
+        final repeatMode =
+            snapshot.data?.repeatMode ?? AudioServiceRepeatMode.none;
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 12,
           children: [
+            IconButton(
+              onPressed: cubit.cycleRepeatMode,
+              icon: Icon(
+                repeatMode == AudioServiceRepeatMode.one
+                    ? Icons.repeat_one_rounded
+                    : Icons.repeat_rounded,
+                size: 30,
+                color: repeatMode == AudioServiceRepeatMode.none
+                    ? Colors.white
+                    : primaryColor,
+              ),
+            ),
             IconButton(
               onPressed: cubit.playPrevious,
               icon: const Icon(
@@ -31,7 +48,6 @@ class SongControls extends StatelessWidget {
                 color: Colors.white,
               ),
             ),
-            horizontalSpace24,
             Container(
               decoration: const BoxDecoration(
                 color: Colors.white,
@@ -47,7 +63,6 @@ class SongControls extends StatelessWidget {
                 ),
               ),
             ),
-            horizontalSpace24,
             IconButton(
               onPressed: cubit.playNext,
               icon: const Icon(
@@ -55,6 +70,37 @@ class SongControls extends StatelessWidget {
                 size: 45,
                 color: Colors.white,
               ),
+            ),
+            BlocBuilder<HomeCubit, HomeStates>(
+              buildWhen: (previous, current) =>
+                  current is HomeFavoriteToggledState ||
+                  current is HomeFavoritesLoadedState,
+              builder: (context, state) {
+                final song = cubit.songs.firstWhere(
+                  (element) => element.path == songPath,
+                  orElse: () => SongModel(
+                    id: -1,
+                    path: songPath,
+                    title: 'Unknown',
+                    artist: 'Unknown',
+                  ),
+                );
+                final isFav = cubit.isSongFavorite(song.id);
+                return IconButton(
+                  onPressed: () {
+                    if (song.id != -1) {
+                      cubit.toggleFavorite(song);
+                    }
+                  },
+                  icon: Icon(
+                    isFav
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
+                    size: 30,
+                    color: isFav ? primaryColor : Colors.white,
+                  ),
+                );
+              },
             ),
           ],
         );

@@ -54,3 +54,24 @@ class HomeLoadSongsErrorState extends HomeStates {
 
 //palette
 class HomeWaveColorUpdated extends HomeStates {}
+
+// Tab Switch
+class HomeTabChangedState extends HomeStates {}
+
+//shuffle
+class HomeShuffleChanged extends HomeStates {
+  final bool isEnabled;
+
+  HomeShuffleChanged(this.isEnabled);
+}
+
+// Favorites
+class HomeFavoriteToggledState extends HomeStates {
+  final bool isFavorite;
+  HomeFavoriteToggledState(this.isFavorite);
+}
+
+class HomeFavoritesLoadedState extends HomeStates {
+  final List<SongModel> favorites;
+  HomeFavoritesLoadedState(this.favorites);
+}

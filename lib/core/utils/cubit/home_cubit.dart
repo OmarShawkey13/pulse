@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pulse/core/di/injections.dart';
 import 'package:pulse/core/models/song_model.dart';
 import 'package:pulse/core/network/local/cache_helper.dart';
+import 'package:pulse/core/network/local/database_helper.dart';
 import 'package:pulse/core/network/service/palette_service.dart';
 import 'package:pulse/core/network/service/pulse_audio_handler.dart';
 import 'package:pulse/core/utils/cubit/home_state.dart';
@@ -26,7 +27,11 @@ class HomeCubit extends Cubit<HomeStates> {
   bool _isDarkMode = false;
   List<String> _queue = [];
   List<SongModel> songs = [];
+  List<SongModel> recentSongs = [];
+  List<SongModel> favorites = [];
   int _currentIndex = -1;
+  int _selectedTabIndex = 0;
+  Color? waveColor;
 
   // Getters
   bool get isDarkMode => _isDarkMode;
@@ -34,6 +39,8 @@ class HomeCubit extends Cubit<HomeStates> {
   bool get hasNext => _currentIndex < _queue.length - 1;
 
   bool get hasPrevious => _currentIndex > 0;
+
+  int get selectedTabIndex => _selectedTabIndex;
 
   String? get currentSongPath =>
       (_currentIndex >= 0 && _currentIndex < _queue.length)
@@ -51,38 +58,47 @@ class HomeCubit extends Cubit<HomeStates> {
     emit(HomeChangeThemeState());
   }
 
+  // Tabs
+  void changeTab(int index) {
+    _selectedTabIndex = index;
+    emit(HomeTabChangedState());
+  }
+
   // Initialization
   void initializeAudioHandler() {
     _audioHandler.onSkipToNext = playNext;
     _audioHandler.onSkipToPrevious = playPrevious;
+    _audioHandler.onSongFinished = _onSongFinished;
+
     _audioHandler.playbackState.listen((state) {
       if (state.processingState == AudioProcessingState.idle ||
           state.processingState == AudioProcessingState.ready) {
         _saveLastPlayedSong();
       }
     });
+
+    loadFavorites();
   }
 
   // Audio Controls
   Future<void> seek(Duration position) => _audioHandler.seek(position);
 
-  Future<void> playSong(String path) async {
+  Future<void> playSong(String path, {List<String>? queue}) async {
+    if (queue != null) setQueue(queue);
+
     final index = _queue.indexOf(path);
     if (index == -1) return;
 
     _currentIndex = index;
 
-    // Reset color to avoid showing previous song's color
-    waveColor = null;
-    emit(HomeWaveColorUpdated());
-
+    _resetWaveColor();
     emit(HomePlayerPlayState(path));
 
-    // Load palette
     loadWavePalette();
 
     final song = _getSongDetails(path);
 
+    // Only set song if it's different to avoid reloading
     if (_audioHandler.mediaItem.value?.id != path) {
       await _audioHandler.setSong(
         path,
@@ -95,29 +111,45 @@ class HomeCubit extends Cubit<HomeStates> {
     await _audioHandler.play();
   }
 
+  Future<void> _onSongFinished() async {
+    final repeatMode = _audioHandler.playbackState.value.repeatMode;
+
+    if (repeatMode == AudioServiceRepeatMode.one) {
+      await seek(Duration.zero);
+      await _audioHandler.play();
+      return;
+    }
+
+    await playNext();
+  }
+
   Future<void> playNext() async {
-    if (!hasNext) return;
+    final isRepeatAll =
+        _audioHandler.playbackState.value.repeatMode ==
+        AudioServiceRepeatMode.all;
+
+    if (!hasNext) {
+      if (!isRepeatAll || _queue.isEmpty) return;
+      _currentIndex = -1; // Prepare to wrap around
+    }
+
     _currentIndex++;
-
-    waveColor = null;
-    emit(HomeWaveColorUpdated());
-
-    loadWavePalette();
-
-    await _playCurrentIndex();
+    await _changeSongAtIndex();
     emit(HomePlayerNextState(_queue[_currentIndex]));
   }
 
   Future<void> playPrevious() async {
-    if (!hasPrevious) return;
+    final isRepeatAll =
+        _audioHandler.playbackState.value.repeatMode ==
+        AudioServiceRepeatMode.all;
+
+    if (!hasPrevious) {
+      if (!isRepeatAll || _queue.isEmpty) return;
+      _currentIndex = _queue.length; // Prepare to wrap around
+    }
+
     _currentIndex--;
-
-    waveColor = null;
-    emit(HomeWaveColorUpdated());
-
-    loadWavePalette();
-
-    await _playCurrentIndex();
+    await _changeSongAtIndex();
     emit(HomePlayerPreviousState(_queue[_currentIndex]));
   }
 
@@ -131,7 +163,27 @@ class HomeCubit extends Cubit<HomeStates> {
     emit(HomePlayerStopState());
   }
 
+  Future<void> cycleRepeatMode() async {
+    final currentMode = _audioHandler.playbackState.value.repeatMode;
+    final nextMode = switch (currentMode) {
+      AudioServiceRepeatMode.none => AudioServiceRepeatMode.all,
+      AudioServiceRepeatMode.all => AudioServiceRepeatMode.one,
+      AudioServiceRepeatMode.one => AudioServiceRepeatMode.none,
+      _ => AudioServiceRepeatMode.none,
+    };
+    await _audioHandler.setRepeatMode(nextMode);
+  }
+
+  // Helper for next/previous navigation
+  Future<void> _changeSongAtIndex() async {
+    _resetWaveColor();
+    loadWavePalette();
+    await _playCurrentIndex();
+  }
+
   Future<void> _playCurrentIndex() async {
+    if (_currentIndex < 0 || _currentIndex >= _queue.length) return;
+
     final path = _queue[_currentIndex];
     final song = _getSongDetails(path);
     await _audioHandler.setSong(
@@ -164,27 +216,62 @@ class HomeCubit extends Cubit<HomeStates> {
         ignoreCase: true,
       );
 
-      songs = result
-          .where((e) => e.data.isNotEmpty)
-          .map(
-            (e) => SongModel(
-              id: e.id,
-              path: e.data,
-              title: e.title,
-              artist: e.artist == null || e.artist == '<unknown>'
-                  ? 'Unknown'
-                  : e.artist!,
-            ),
-          )
-          .toList();
+      // Filter invalid or system sounds
+      final filteredList = result.where((e) {
+        final isSystemSound =
+            (e.isAlarm ?? false) ||
+            (e.isRingtone ?? false) ||
+            (e.isNotification ?? false);
+        return e.data.isNotEmpty && !isSystemSound && (e.isMusic ?? false);
+      }).toList();
+
+      SongModel mapToSongModel(audio.SongModel e) => SongModel(
+        id: e.id,
+        path: e.data,
+        title: e.title,
+        artist: (e.artist == null || e.artist == '<unknown>')
+            ? 'Unknown'
+            : e.artist!,
+      );
+
+      songs = filteredList.map(mapToSongModel).toList();
+
+      // Populate recentSongs (sorted by date added)
+      final recentList = List<audio.SongModel>.from(filteredList)
+        ..sort((a, b) => (b.dateAdded ?? 0).compareTo(a.dateAdded ?? 0));
+
+      recentSongs = recentList.map(mapToSongModel).toList();
 
       setQueue(songs.map((e) => e.path).toList());
+
       await _restoreLastPlayedSong();
+      await loadFavorites();
 
       emit(HomeLoadSongsSuccessState(songs));
     } catch (e) {
       emit(HomeLoadSongsErrorState(e.toString()));
     }
+  }
+
+  // Favorites
+  Future<void> loadFavorites() async {
+    favorites = await DatabaseHelper.instance.getFavorites();
+    emit(HomeFavoritesLoadedState(favorites));
+  }
+
+  Future<void> toggleFavorite(SongModel song) async {
+    final isFav = isSongFavorite(song.id);
+    if (isFav) {
+      await DatabaseHelper.instance.removeFavorite(song.id);
+    } else {
+      await DatabaseHelper.instance.addFavorite(song);
+    }
+    await loadFavorites();
+    emit(HomeFavoriteToggledState(!isFav));
+  }
+
+  bool isSongFavorite(int id) {
+    return favorites.any((element) => element.id == id);
   }
 
   // Helpers
@@ -201,6 +288,13 @@ class HomeCubit extends Cubit<HomeStates> {
     );
   }
 
+  void _resetWaveColor() {
+    if (waveColor != null) {
+      waveColor = null;
+      emit(HomeWaveColorUpdated());
+    }
+  }
+
   Future<void> _saveLastPlayedSong() async {
     if (currentSongPath != null) {
       await CacheHelper.saveData(key: 'last_song_path', value: currentSongPath);
@@ -208,37 +302,64 @@ class HomeCubit extends Cubit<HomeStates> {
         key: 'last_song_position',
         value: _audioHandler.playbackState.value.position.inSeconds,
       );
+      // Save the current queue to maintain context
+      await CacheHelper.saveData(key: 'last_queue', value: _queue);
+
+      // Save repeat mode
+      await CacheHelper.saveData(
+        key: 'repeat_mode',
+        value: _audioHandler.playbackState.value.repeatMode.index,
+      );
     }
   }
 
   Future<void> _restoreLastPlayedSong() async {
     final lastPath = CacheHelper.getData(key: 'last_song_path');
     final lastPositionSeconds = CacheHelper.getData(key: 'last_song_position');
+    final lastQueue = CacheHelper.getData(key: 'last_queue');
+    final lastRepeatMode = CacheHelper.getData(key: 'repeat_mode');
 
-    if (lastPath is String) {
-      final index = _queue.indexOf(lastPath);
-      if (index != -1) {
-        _currentIndex = index;
-        final song = _getSongDetails(lastPath);
-
-        await _audioHandler.setSong(
-          lastPath,
-          title: song.title,
-          artist: song.artist,
-          id: song.id,
-        );
-
-        await loadWavePalette();
-
-        if (lastPositionSeconds is int) {
-          await _audioHandler.seek(Duration(seconds: lastPositionSeconds));
-        }
-        emit(HomePlayerPauseState());
+    // Restore Queue if exists
+    if (lastQueue != null && lastQueue is List) {
+      final storedQueue = lastQueue.map((e) => e.toString()).toList();
+      if (storedQueue.isNotEmpty) {
+        _queue = storedQueue;
       }
     }
-  }
 
-  Color? waveColor;
+    // Restore Repeat Mode
+    if (lastRepeatMode is int &&
+        lastRepeatMode >= 0 &&
+        lastRepeatMode < AudioServiceRepeatMode.values.length) {
+      await _audioHandler.setRepeatMode(
+        AudioServiceRepeatMode.values[lastRepeatMode],
+      );
+    }
+
+    if (lastPath is! String) return;
+
+    final index = _queue.indexOf(lastPath);
+    if (index == -1) return;
+
+    _currentIndex = index;
+    final song = _getSongDetails(lastPath);
+
+    await _audioHandler.setSong(
+      lastPath,
+      title: song.title,
+      artist: song.artist,
+      id: song.id,
+    );
+
+    // Don't auto-play on restore, just prepare
+    await loadWavePalette();
+
+    if (lastPositionSeconds is int) {
+      await _audioHandler.seek(Duration(seconds: lastPositionSeconds));
+    }
+
+    emit(HomePlayerPauseState());
+  }
 
   Future<void> loadWavePalette() async {
     if (currentSongPath == null) return;
@@ -256,21 +377,15 @@ class HomeCubit extends Cubit<HomeStates> {
       );
 
       if (bytes == null) {
-        if (waveColor != null) {
-          waveColor = null;
-          emit(HomeWaveColorUpdated());
-        }
+        _resetWaveColor();
         return;
       }
 
-      final color = await PaletteService.extractDominantColorFromBytes(bytes);
-
-      waveColor = color;
+      waveColor = await PaletteService.extractDominantColorFromBytes(bytes);
       emit(HomeWaveColorUpdated());
     } catch (e) {
       debugPrint('Error loading palette: $e');
-      waveColor = null;
-      emit(HomeWaveColorUpdated());
+      _resetWaveColor();
     }
   }
 }
