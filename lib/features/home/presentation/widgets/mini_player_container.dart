@@ -1,9 +1,10 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
+import 'package:pulse/core/theme/colors.dart';
+import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
 
 class MiniPlayerContainer extends StatelessWidget {
-  final double value;
+  final double value; // From 0.0 (mini) to 1.0 (full)
   final double minHeight;
   final double maxHeight;
   final Widget child;
@@ -18,26 +19,29 @@ class MiniPlayerContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final height = lerpDouble(minHeight, maxHeight, value)!;
-
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: SizedBox(
-        height: height,
+    final currentHeight = lerpDouble(minHeight, maxHeight, value)!;
+    final isDark = themeCubit.isDarkMode;
+    return RepaintBoundary(
+      child: Align(
+        alignment: Alignment.bottomCenter,
         child: Container(
+          width: double.infinity,
+          height: currentHeight,
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: Theme.of(context).cardTheme.color ?? Colors.grey[900],
+            color: isDark ? ColorsManager.darkCard : ColorsManager.lightSurface,
             borderRadius: BorderRadius.vertical(
-              top: Radius.circular(16 * (1 - value)),
+              top: Radius.circular(lerpDouble(20.0, 0.0, value)!),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 8,
-                offset: const Offset(0, -2),
-              ),
-            ],
+            boxShadow: value < 0.1
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ]
+                : null,
           ),
           child: child,
         ),

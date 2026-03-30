@@ -8,7 +8,7 @@ import 'package:pulse/core/network/local/cache_helper.dart';
 import 'package:pulse/core/network/local/database_helper.dart';
 import 'package:pulse/core/network/service/palette_service.dart';
 import 'package:pulse/core/network/service/pulse_audio_handler.dart';
-import 'package:pulse/core/utils/cubit/home_state.dart';
+import 'package:pulse/core/utils/cubit/home/home_state.dart';
 import 'package:pulse/main.dart';
 
 HomeCubit get homeCubit => HomeCubit.get(navigatorKey.currentContext!);
@@ -24,18 +24,17 @@ class HomeCubit extends Cubit<HomeStates> {
   HomeCubit() : super(HomeInitialState());
 
   // Variables
-  bool _isDarkMode = false;
   List<String> _queue = [];
+  List<String> _originalQueue = [];
   List<SongModel> songs = [];
   List<SongModel> recentSongs = [];
   List<SongModel> favorites = [];
   int _currentIndex = -1;
   int _selectedTabIndex = 0;
   Color? waveColor;
+  bool _isShuffle = false;
 
   // Getters
-  bool get isDarkMode => _isDarkMode;
-
   bool get hasNext => _currentIndex < _queue.length - 1;
 
   bool get hasPrevious => _currentIndex > 0;
@@ -50,13 +49,6 @@ class HomeCubit extends Cubit<HomeStates> {
   Stream<Duration> get positionStream => AudioService.position;
 
   Stream<PlaybackState> get playbackStateStream => _audioHandler.playbackState;
-
-  // Theme
-  void changeTheme({bool? fromShared}) {
-    _isDarkMode = fromShared ?? !_isDarkMode;
-    CacheHelper.saveData(key: 'isDark', value: _isDarkMode);
-    emit(HomeChangeThemeState());
-  }
 
   // Tabs
   void changeTab(int index) {
@@ -174,6 +166,37 @@ class HomeCubit extends Cubit<HomeStates> {
     await _audioHandler.setRepeatMode(nextMode);
   }
 
+  Future<void> toggleShuffle() async {
+    _isShuffle = !_isShuffle;
+
+    if (_isShuffle) {
+      _originalQueue = List.from(_queue);
+      final currentSong = currentSongPath;
+
+      _queue.shuffle();
+
+      if (currentSong != null) {
+        _queue.remove(currentSong);
+        _queue.insert(0, currentSong);
+        _currentIndex = 0;
+      }
+    } else {
+      final currentSong = currentSongPath;
+      if (_originalQueue.isNotEmpty) {
+        _queue = List.from(_originalQueue);
+        if (currentSong != null) {
+          _currentIndex = _queue.indexOf(currentSong);
+        }
+      }
+    }
+
+    await _audioHandler.setShuffleMode(
+      _isShuffle ? AudioServiceShuffleMode.all : AudioServiceShuffleMode.none,
+    );
+
+    emit(HomeShuffleChanged(_isShuffle));
+  }
+
   // Helper for next/previous navigation
   Future<void> _changeSongAtIndex() async {
     _resetWaveColor();
@@ -275,7 +298,7 @@ class HomeCubit extends Cubit<HomeStates> {
   }
 
   // Helpers
-  void setQueue(List<String> paths, {int startIndex = 0}) {
+  void setQueue(List<String> paths, {int startIndex = -1}) {
     _queue = paths;
     _currentIndex = startIndex;
   }

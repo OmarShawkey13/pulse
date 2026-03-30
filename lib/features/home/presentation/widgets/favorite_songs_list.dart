@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pulse/core/utils/cubit/home_cubit.dart';
-import 'package:pulse/core/utils/cubit/home_state.dart';
+import 'package:pulse/core/theme/text_styles.dart';
+import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
+import 'package:pulse/core/utils/cubit/home/home_state.dart';
 import 'package:pulse/features/home/presentation/widgets/song_item.dart';
 
 class FavoriteSongsList extends StatelessWidget {
@@ -20,10 +21,10 @@ class FavoriteSongsList extends StatelessWidget {
           state is HomeFavoriteToggledState,
       builder: (context, state) {
         if (homeCubit.favorites.isEmpty) {
-          return const Center(
+          return Center(
             child: Text(
               'No Favorites Yet',
-              style: TextStyle(color: Colors.white),
+              style: TextStylesManager.medium16,
             ),
           );
         }

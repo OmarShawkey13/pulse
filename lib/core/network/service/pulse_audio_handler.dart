@@ -90,6 +90,18 @@ class PulseAudioHandler extends BaseAudioHandler {
     }
   }
 
+  // 🔀 SHUFFLE MODE
+  @override
+  Future<void> setShuffleMode(AudioServiceShuffleMode shuffleMode) async {
+    playbackState.add(
+      playbackState.value.copyWith(
+        shuffleMode: shuffleMode,
+        updatePosition: _player.position,
+        bufferedPosition: _player.bufferedPosition,
+      ),
+    );
+  }
+
   // ⏩ SEEK
   @override
   Future<void> seek(Duration position) => _player.seek(position);

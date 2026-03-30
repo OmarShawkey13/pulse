@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pulse/core/theme/colors.dart';
-import 'package:pulse/core/utils/cubit/home_cubit.dart';
-import 'package:pulse/core/utils/cubit/home_state.dart';
+import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
+import 'package:pulse/core/utils/cubit/theme/theme_state.dart';
 
 class HomeBackground extends StatelessWidget {
   final Widget child;
@@ -11,11 +11,10 @@ class HomeBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HomeCubit, HomeStates>(
-      buildWhen: (_, state) => state is HomeChangeThemeState,
+    return BlocBuilder<ThemeCubit, ThemeState>(
+      buildWhen: (_, state) => state is ThemeChangeThemeState,
       builder: (context, state) {
-        final isDark = homeCubit.isDarkMode;
-
+        final isDark = themeCubit.isDarkMode;
         return Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(

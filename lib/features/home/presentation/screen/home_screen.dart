@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pulse/core/utils/cubit/home_cubit.dart';
-import 'package:pulse/core/utils/cubit/home_state.dart';
+import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
+import 'package:pulse/core/utils/cubit/home/home_state.dart';
 import 'package:pulse/features/home/presentation/widgets/custom_tab_switch.dart';
 import 'package:pulse/features/home/presentation/widgets/favorite_songs_list.dart';
 import 'package:pulse/features/home/presentation/widgets/home_app_bar.dart';

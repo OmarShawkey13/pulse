@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/theme/text_styles.dart';
 import 'package:pulse/core/utils/constants/spacing.dart';
-import 'package:pulse/core/utils/cubit/home_cubit.dart';
+import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
 
 class HomeErrorWidget extends StatelessWidget {
   final String error;
@@ -26,7 +26,9 @@ class HomeErrorWidget extends StatelessWidget {
             child: Text(
               error,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey),
+              style: TextStylesManager.regular14.copyWith(
+                color: ColorsManager.lightTextSecondary,
+              ),
             ),
           ),
           ElevatedButton.icon(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pulse/core/utils/cubit/home_cubit.dart';
-import 'package:pulse/core/utils/cubit/home_state.dart';
+import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
+import 'package:pulse/core/utils/cubit/home/home_state.dart';
 import 'package:pulse/features/home/presentation/widgets/mini_player_container.dart';
 import 'package:pulse/features/home/presentation/widgets/mini_player_content.dart';
 import 'package:pulse/features/home/presentation/widgets/mini_player_gesture_wrapper.dart';
@@ -54,9 +54,8 @@ class _MiniPlayerState extends State<MiniPlayer>
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false, // إحنا اللي هنقرر
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
-        // لو الـ MiniPlayer مفتوح
         if (_controller.value > 0.1) {
           _controller.animateTo(
             0,
@@ -64,7 +63,6 @@ class _MiniPlayerState extends State<MiniPlayer>
             curve: Curves.easeOut,
           );
         } else {
-          // لو مقفول → اقفل التطبيق
           SystemNavigator.pop();
         }
       },

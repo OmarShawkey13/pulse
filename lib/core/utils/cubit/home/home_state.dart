@@ -4,20 +4,6 @@ abstract class HomeStates {}
 
 class HomeInitialState extends HomeStates {}
 
-class HomeChangeThemeState extends HomeStates {}
-
-class HomeLanguageUpdatedState extends HomeStates {}
-
-class HomeLanguageLoadingState extends HomeStates {}
-
-class HomeLanguageLoadedState extends HomeStates {}
-
-class HomeLanguageErrorState extends HomeStates {
-  final String error;
-
-  HomeLanguageErrorState(this.error);
-}
-
 //play states
 class HomePlayerPlayState extends HomeStates {
   final String path;

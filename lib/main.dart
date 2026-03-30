@@ -7,8 +7,9 @@ import 'package:pulse/core/network/service/pulse_audio_handler.dart';
 import 'package:pulse/core/theme/theme.dart';
 import 'package:pulse/core/utils/constants/my_bloc_observer.dart';
 import 'package:pulse/core/utils/constants/routes.dart';
-import 'package:pulse/core/utils/cubit/home_cubit.dart';
-import 'package:pulse/core/utils/cubit/home_state.dart';
+import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
+import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
+import 'package:pulse/core/utils/cubit/theme/theme_state.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -16,13 +17,14 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final audioHandler = await AudioService.init(
     builder: () => PulseAudioHandler(),
-    config: const AudioServiceConfig(
+    config: AudioServiceConfig(
       androidNotificationChannelId: 'com.pulse.music.playback',
       androidNotificationChannelName: 'Pulse Music',
       androidNotificationOngoing: true,
       androidResumeOnClick: true,
       androidNotificationClickStartsActivity: true,
       androidShowNotificationBadge: false,
+      androidStopForegroundOnPause: false,
     ),
   );
   await initInjections(audioHandler);
@@ -38,18 +40,29 @@ void main() async {
 class MyApp extends StatelessWidget {
   final bool? isDark;
 
-  const MyApp({super.key, required this.isDark});
+  const MyApp({
+    super.key,
+    required this.isDark,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => sl<HomeCubit>()
-        ..changeTheme(fromShared: isDark)
-        ..initializeAudioHandler(),
-      child: BlocBuilder<HomeCubit, HomeStates>(
-        buildWhen: (previous, current) => current is HomeChangeThemeState,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => sl<HomeCubit>()..initializeAudioHandler(),
+        ),
+        BlocProvider(
+          create: (context) => sl<ThemeCubit>()
+            ..changeTheme(
+              fromShared: isDark,
+            ),
+        ),
+      ],
+      child: BlocBuilder<ThemeCubit, ThemeState>(
+        buildWhen: (previous, current) => current is ThemeChangeThemeState,
         builder: (context, state) {
-          final cubit = HomeCubit.get(context);
+          final cubit = ThemeCubit.get(context);
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             navigatorKey: navigatorKey,
