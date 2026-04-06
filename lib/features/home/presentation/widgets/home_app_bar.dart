@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pulse/core/theme/colors.dart';
+import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
 import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
 import 'package:pulse/core/utils/cubit/theme/theme_state.dart';
+
+import 'package:pulse/features/home/presentation/widgets/song_search_delegate.dart';
 
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   const HomeAppBar({super.key});
@@ -17,10 +20,26 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           title: const Text('Pulse Music'),
           actions: [
             IconButton(
+              onPressed: () {
+                showSearch(
+                  context: context,
+                  delegate: SongSearchDelegate(homeCubit.songs),
+                );
+              },
+              icon: Icon(
+                Icons.search_rounded,
+                color: isDark
+                    ? ColorsManager.darkTextPrimary
+                    : ColorsManager.lightTextPrimary,
+              ),
+            ),
+            IconButton(
               onPressed: themeCubit.changeTheme,
               icon: Icon(
                 isDark ? Icons.wb_sunny : Icons.nightlight_round,
-                color: isDark ? ColorsManager.warning : ColorsManager.lightTextPrimary,
+                color: isDark
+                    ? ColorsManager.warning
+                    : ColorsManager.lightTextPrimary,
               ),
             ),
           ],

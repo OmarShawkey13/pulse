@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pulse/core/models/song_model.dart';
+import 'package:pulse/core/models/music_model.dart';
 import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/theme/text_styles.dart';
 import 'package:pulse/core/utils/constants/primary/marquee_text.dart';
@@ -7,7 +7,7 @@ import 'package:pulse/core/utils/constants/spacing.dart';
 import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
 
 class SongTitleSection extends StatelessWidget {
-  final SongModel song;
+  final MusicModel song;
 
   const SongTitleSection({super.key, required this.song});
 

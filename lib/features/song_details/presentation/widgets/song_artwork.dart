@@ -4,7 +4,6 @@ import 'package:on_audio_query_pluse/on_audio_query.dart';
 import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
 import 'package:pulse/core/utils/cubit/home/home_state.dart';
-import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
 
 class SongArtwork extends StatefulWidget {
   const SongArtwork({super.key});
@@ -22,7 +21,7 @@ class _SongArtworkState extends State<SongArtwork>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 4),
     )..repeat(reverse: true);
   }
 
@@ -43,79 +42,101 @@ class _SongArtworkState extends State<SongArtwork>
       builder: (context, state) {
         final cubit = homeCubit;
         final currentPath = cubit.currentSongPath;
+
+        if (currentPath == null) return const SizedBox.shrink();
+
         final song = cubit.songs.firstWhere(
           (e) => e.path == currentPath,
           orElse: () => cubit.songs.first,
         );
+
         final auraColor = cubit.waveColor ?? ColorsManager.primary;
-        final isDark = themeCubit.isDarkMode;
+        final isDark = Theme.of(context).brightness == Brightness.dark;
 
         return Center(
           child: Stack(
             alignment: Alignment.center,
             children: [
-              // Animated Aura Glow behind the artwork
+              // Animated Aura Glow
               AnimatedBuilder(
                 animation: _controller,
-                builder: (context, child) {
-                  return Container(
-                    height:
-                        MediaQuery.sizeOf(context).width * 0.75 +
-                        (_controller.value * 25),
-                    width:
-                        MediaQuery.sizeOf(context).width * 0.75 +
-                        (_controller.value * 25),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: auraColor.withValues(alpha: 0.3),
-                          blurRadius: 40 + (_controller.value * 20),
-                          spreadRadius: 10 + (_controller.value * 10),
+                builder: (context, _) {
+                  final size = MediaQuery.sizeOf(context).width * 0.72;
+                  final pulse = _controller.value;
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Outer soft glow
+                      Container(
+                        height: size * (1.1 + (pulse * 0.1)),
+                        width: size * (1.1 + (pulse * 0.1)),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: auraColor.withValues(alpha: 0.15),
+                              blurRadius: 60 + (pulse * 20),
+                              spreadRadius: 10,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                      // Inner intense glow
+                      Container(
+                        height: size * 0.9,
+                        width: size * 0.9,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: auraColor.withValues(alpha: 0.4),
+                              blurRadius: 40 + (pulse * 30),
+                              spreadRadius: -5,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   );
                 },
               ),
 
-              // Main Artwork
-              Hero(
-                tag: 'song_artwork_${song.id}',
-                child: Container(
-                  height: MediaQuery.sizeOf(context).width * 0.8,
-                  width: MediaQuery.sizeOf(context).width * 0.8,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(32),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(32),
-                    child: QueryArtworkWidget(
-                      id: song.id,
-                      type: ArtworkType.AUDIO,
-                      artworkHeight: double.infinity,
-                      artworkWidth: double.infinity,
-                      artworkFit: BoxFit.cover,
-                      quality: 100,
-                      size: 1000,
-                      format: ArtworkFormat.PNG,
-                      artworkQuality: FilterQuality.high,
-                      nullArtworkWidget: Container(
-                        color: isDark
-                            ? ColorsManager.darkCard
-                            : ColorsManager.lightDivider,
-                        child: Icon(
-                          Icons.music_note_rounded,
-                          size: 100,
-                          color: ColorsManager.primary.withValues(alpha: 0.5),
+              // Main Artwork with Floating Animation
+              AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, -10 * _controller.value),
+                    child: child,
+                  );
+                },
+                child: Hero(
+                  tag: 'artwork_${song.id}',
+                  child: Container(
+                    height: MediaQuery.sizeOf(context).width * 0.78,
+                    width: MediaQuery.sizeOf(context).width * 0.78,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(40),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.4),
+                          blurRadius: 30,
+                          offset: const Offset(0, 20),
                         ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(40),
+                      child: QueryArtworkWidget(
+                        id: song.id,
+                        type: ArtworkType.AUDIO,
+                        artworkHeight: double.infinity,
+                        artworkWidth: double.infinity,
+                        artworkFit: BoxFit.cover,
+                        quality: 100,
+                        size: 1000,
+                        format: ArtworkFormat.PNG,
+                        nullArtworkWidget: _buildPlaceholder(isDark),
                       ),
                     ),
                   ),
@@ -125,6 +146,17 @@ class _SongArtworkState extends State<SongArtwork>
           ),
         );
       },
+    );
+  }
+
+  Widget _buildPlaceholder(bool isDark) {
+    return Container(
+      color: isDark ? ColorsManager.darkCard : ColorsManager.lightDivider,
+      child: Icon(
+        Icons.music_note_rounded,
+        size: 80,
+        color: ColorsManager.primary.withValues(alpha: 0.4),
+      ),
     );
   }
 }

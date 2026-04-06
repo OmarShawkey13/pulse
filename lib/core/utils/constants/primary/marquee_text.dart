@@ -11,9 +11,9 @@ class MarqueeText extends StatefulWidget {
     super.key,
     required this.text,
     required this.style,
-    this.duration = const Duration(seconds: 12),
+    this.duration = const Duration(seconds: 20),
     this.gap = 50,
-    this.pauseDuration = const Duration(seconds: 2),
+    this.pauseDuration = const Duration(seconds: 3),
   });
 
   @override
@@ -66,11 +66,15 @@ class _MarqueeTextState extends State<MarqueeText>
   }
 
   void _start() async {
-    _controller.stop();
+    if (_controller.isAnimating) return;
 
-    if (!_shouldScroll) return;
+    if (!_shouldScroll) {
+      _controller.stop();
+      return;
+    }
 
-    await Future<Duration>.delayed(widget.pauseDuration);
+    // ✅ FIX
+    await Future<void>.delayed(widget.pauseDuration);
 
     if (!mounted) return;
 
@@ -81,13 +85,23 @@ class _MarqueeTextState extends State<MarqueeText>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        _containerWidth = constraints.hasBoundedWidth
+        final newContainerWidth = constraints.hasBoundedWidth
             ? constraints.maxWidth
             : MediaQuery.of(context).size.width;
 
-        _textWidth = _measureTextWidth(context);
+        final newTextWidth = _measureTextWidth(context);
 
-        WidgetsBinding.instance.addPostFrameCallback((_) => _start());
+        if (newContainerWidth != _containerWidth ||
+            newTextWidth != _textWidth) {
+          _containerWidth = newContainerWidth;
+          _textWidth = newTextWidth;
+
+          if (_shouldScroll) {
+            WidgetsBinding.instance.addPostFrameCallback((_) => _start());
+          } else {
+            _controller.stop();
+          }
+        }
 
         if (!_shouldScroll) {
           return Text(widget.text, style: widget.style, maxLines: 1);

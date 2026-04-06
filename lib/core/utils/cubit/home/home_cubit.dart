@@ -3,7 +3,7 @@ import 'package:on_audio_query_pluse/on_audio_query.dart' as audio;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pulse/core/di/injections.dart';
-import 'package:pulse/core/models/song_model.dart';
+import 'package:pulse/core/models/music_model.dart';
 import 'package:pulse/core/network/local/cache_helper.dart';
 import 'package:pulse/core/network/local/database_helper.dart';
 import 'package:pulse/core/network/service/palette_service.dart';
@@ -26,9 +26,10 @@ class HomeCubit extends Cubit<HomeStates> {
   // Variables
   List<String> _queue = [];
   List<String> _originalQueue = [];
-  List<SongModel> songs = [];
-  List<SongModel> recentSongs = [];
-  List<SongModel> favorites = [];
+  List<MusicModel> songs = [];
+  List<MusicModel> recentSongs = [];
+  List<MusicModel> favorites = [];
+  List<Map<String, dynamic>> playlists = [];
   int _currentIndex = -1;
   int _selectedTabIndex = 0;
   Color? waveColor;
@@ -248,13 +249,16 @@ class HomeCubit extends Cubit<HomeStates> {
         return e.data.isNotEmpty && !isSystemSound && (e.isMusic ?? false);
       }).toList();
 
-      SongModel mapToSongModel(audio.SongModel e) => SongModel(
+      MusicModel mapToSongModel(audio.SongModel e) => MusicModel(
         id: e.id,
         path: e.data,
         title: e.title,
         artist: (e.artist == null || e.artist == '<unknown>')
             ? 'Unknown'
             : e.artist!,
+        album: e.album,
+        duration: e.duration,
+        size: e.size,
       );
 
       songs = filteredList.map(mapToSongModel).toList();
@@ -269,11 +273,51 @@ class HomeCubit extends Cubit<HomeStates> {
 
       await _restoreLastPlayedSong();
       await loadFavorites();
+      await loadPlaylists();
 
       emit(HomeLoadSongsSuccessState(songs));
     } catch (e) {
       emit(HomeLoadSongsErrorState(e.toString()));
     }
+  }
+
+  // --- Playlists ---
+  Future<void> loadPlaylists() async {
+    emit(HomePlaylistsLoadingState());
+    playlists = await DatabaseHelper.instance.getPlaylists();
+    emit(HomePlaylistsLoadedState(playlists));
+  }
+
+  Future<void> createPlaylist(String name) async {
+    await DatabaseHelper.instance.createPlaylist(name);
+    await loadPlaylists();
+    emit(HomePlaylistCreatedState());
+  }
+
+  Future<void> deletePlaylist(int id) async {
+    await DatabaseHelper.instance.deletePlaylist(id);
+    await loadPlaylists();
+    emit(HomePlaylistDeletedState());
+  }
+
+  Future<void> addSongToPlaylist({
+    required int playlistId,
+    required MusicModel song,
+  }) async {
+    await DatabaseHelper.instance.addSongToPlaylist(
+      playlistId: playlistId,
+      song: song,
+    );
+    emit(HomeSongAddedToPlaylistState());
+  }
+
+  Future<void> removeSongFromPlaylist(int playlistId, int songId) async {
+    await DatabaseHelper.instance.removeSongFromPlaylist(playlistId, songId);
+    // Refresh if needed, or emit state
+  }
+
+  Future<List<MusicModel>> getPlaylistSongs(int playlistId) async {
+    return await DatabaseHelper.instance.getPlaylistSongs(playlistId);
   }
 
   // Favorites
@@ -282,7 +326,7 @@ class HomeCubit extends Cubit<HomeStates> {
     emit(HomeFavoritesLoadedState(favorites));
   }
 
-  Future<void> toggleFavorite(SongModel song) async {
+  Future<void> toggleFavorite(MusicModel song) async {
     final isFav = isSongFavorite(song.id);
     if (isFav) {
       await DatabaseHelper.instance.removeFavorite(song.id);
@@ -303,11 +347,11 @@ class HomeCubit extends Cubit<HomeStates> {
     _currentIndex = startIndex;
   }
 
-  SongModel _getSongDetails(String path) {
+  MusicModel _getSongDetails(String path) {
     return songs.firstWhere(
       (e) => e.path == path,
       orElse: () =>
-          SongModel(id: 0, path: path, title: 'Unknown', artist: 'Unknown'),
+          MusicModel(id: 0, path: path, title: 'Unknown', artist: 'Unknown'),
     );
   }
 

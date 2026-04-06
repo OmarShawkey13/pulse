@@ -4,8 +4,8 @@ import 'package:pulse/core/utils/constants/primary/conditional_builder.dart';
 import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
 import 'package:pulse/core/utils/cubit/home/home_state.dart';
 import 'package:pulse/features/home/presentation/widgets/home_error_widget.dart';
-import 'package:pulse/features/home/presentation/widgets/song_item_loading.dart';
-import 'package:pulse/features/home/presentation/widgets/songs_list.dart';
+import 'package:pulse/features/home/presentation/widgets/song_list/song_item_loading.dart';
+import 'package:pulse/features/home/presentation/widgets/song_list/songs_list.dart';
 
 class HomeContent extends StatelessWidget {
   const HomeContent({super.key});

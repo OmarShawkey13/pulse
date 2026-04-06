@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pulse/core/theme/text_styles.dart';
 import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
 import 'package:pulse/core/utils/cubit/home/home_state.dart';
-import 'package:pulse/features/home/presentation/widgets/song_item.dart';
+import 'package:pulse/features/home/presentation/widgets/song_list/song_item.dart';
 
 class FavoriteSongsList extends StatelessWidget {
   const FavoriteSongsList({super.key});

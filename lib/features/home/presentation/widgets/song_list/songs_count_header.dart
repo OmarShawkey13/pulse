@@ -16,10 +16,11 @@ class SongsCountHeader extends StatelessWidget {
       child: Text(
         '$count Songs',
         style: TextStylesManager.bold16.copyWith(
-          color: (isDark
-                  ? ColorsManager.darkTextPrimary
-                  : ColorsManager.lightTextPrimary)
-              .withValues(alpha: 0.7),
+          color:
+              (isDark
+                      ? ColorsManager.darkTextPrimary
+                      : ColorsManager.lightTextPrimary)
+                  .withValues(alpha: 0.7),
         ),
       ),
     );

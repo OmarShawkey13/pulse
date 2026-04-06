@@ -40,4 +40,9 @@ class ColorsManager {
   static const Color success = Color(0xFF22C55E);
   static const Color error = Color(0xFFEF4444);
   static const Color warning = Color(0xFFF59E0B);
+
+  // -------- OTHERS -------- //
+  static const Color black = Color(0xFF000000);
+  static const Color white = Color(0xFFFFFFFF);
+  static const Color transparent = Color(0x00000000);
 }

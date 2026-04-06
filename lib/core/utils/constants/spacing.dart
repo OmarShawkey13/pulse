@@ -84,11 +84,11 @@ SizedBox get verticalSpace10 => const SizedBox(height: 10);
 
 SizedBox get verticalSpace12 => const SizedBox(height: 12);
 
-SizedBox get verticalSpace14 => const SizedBox(height: 12);
+SizedBox get verticalSpace14 => const SizedBox(height: 14);
 
 SizedBox get verticalSpace16 => const SizedBox(height: 16);
 
-SizedBox get verticalSpace18 => const SizedBox(height: 16);
+SizedBox get verticalSpace18 => const SizedBox(height: 18);
 
 SizedBox get verticalSpace20 => const SizedBox(height: 20);
 

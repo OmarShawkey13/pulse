@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pulse/core/models/song_model.dart';
-import 'package:pulse/features/home/presentation/widgets/song_item.dart';
+import 'package:pulse/core/models/music_model.dart';
+import 'package:pulse/features/home/presentation/widgets/song_list/song_item.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class SongItemLoading extends StatelessWidget {
@@ -11,7 +11,7 @@ class SongItemLoading extends StatelessWidget {
     return Skeletonizer(
       enabled: true,
       child: SongItem(
-        song: SongModel(
+        song: MusicModel(
           id: 0,
           path: '',
           title: 'Song Title Placeholder',

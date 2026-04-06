@@ -1,4 +1,4 @@
-import 'package:pulse/core/models/song_model.dart';
+import 'package:pulse/core/models/music_model.dart';
 
 abstract class HomeStates {}
 
@@ -29,7 +29,7 @@ class HomePlayerPreviousState extends HomeStates {
 class HomeLoadSongsLoadingState extends HomeStates {}
 
 class HomeLoadSongsSuccessState extends HomeStates {
-  final List<SongModel> songs;
+  final List<MusicModel> songs;
   HomeLoadSongsSuccessState(this.songs);
 }
 
@@ -58,6 +58,25 @@ class HomeFavoriteToggledState extends HomeStates {
 }
 
 class HomeFavoritesLoadedState extends HomeStates {
-  final List<SongModel> favorites;
+  final List<MusicModel> favorites;
   HomeFavoritesLoadedState(this.favorites);
 }
+
+// Playlists
+class HomePlaylistsLoadingState extends HomeStates {}
+
+class HomePlaylistsLoadedState extends HomeStates {
+  final List<Map<String, dynamic>> playlists;
+  HomePlaylistsLoadedState(this.playlists);
+}
+
+class HomePlaylistSongsLoadedState extends HomeStates {
+  final List<MusicModel> songs;
+  HomePlaylistSongsLoadedState(this.songs);
+}
+
+class HomePlaylistCreatedState extends HomeStates {}
+
+class HomePlaylistDeletedState extends HomeStates {}
+
+class HomeSongAddedToPlaylistState extends HomeStates {}
