@@ -1,3 +1,5 @@
+import 'package:pulse/core/utils/constants/constants.dart';
+
 class MusicModel {
   final int id;
   final String path;
@@ -33,8 +35,10 @@ class MusicModel {
     return MusicModel(
       id: map['id'] ?? map['songId'] ?? 0,
       path: map['path'] ?? map['songPath'] ?? '',
-      title: map['title'] ?? map['songTitle'] ?? 'Unknown',
-      artist: map['artist'] ?? map['songArtist'] ?? 'Unknown',
+      title:
+          map['title'] ?? map['songTitle'] ?? appTranslation().get('unknown'),
+      artist:
+          map['artist'] ?? map['songArtist'] ?? appTranslation().get('unknown'),
       album: map['album'] ?? map['songAlbum'],
       duration: map['duration'] ?? map['songDuration'],
       size: map['size'] ?? map['songSize'],

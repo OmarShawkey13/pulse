@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
 import 'package:pulse/core/utils/cubit/theme/theme_state.dart';
+import 'package:pulse/features/home/presentation/widgets/tab_indicator.dart';
+import 'package:pulse/features/home/presentation/widgets/tab_item.dart';
 
 class CustomTabSwitch extends StatefulWidget {
   final int selectedIndex;
@@ -54,9 +56,10 @@ class _CustomTabSwitchState extends State<CustomTabSwitch>
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ThemeCubit, ThemeState>(
-      buildWhen: (_, state) => state is ThemeChangeThemeState,
+      buildWhen: (_, state) =>
+          state is ThemeChangeThemeState || state is ThemeLanguageUpdatedState,
       builder: (context, state) {
-        final isDark = themeCubit.isDarkMode;
+        final isDark = ThemeCubit.get(context).isDarkMode;
         final bgColor = isDark
             ? ColorsManager.darkCard.withValues(alpha: 0.45)
             : ColorsManager.lightDivider;
@@ -99,7 +102,7 @@ class _CustomTabSwitchState extends State<CustomTabSwitch>
                         top: 0,
                         bottom: 0,
                         width: tabWidth,
-                        child: const _Indicator(),
+                        child: const TabIndicator(),
                       ),
                       child!,
                     ],
@@ -107,7 +110,7 @@ class _CustomTabSwitchState extends State<CustomTabSwitch>
                   child: Row(
                     children: List.generate(
                       widget.tabs.length,
-                      (i) => _TabItem(
+                      (i) => TabItem(
                         title: widget.tabs[i],
                         index: i,
                         controller: _controller,
@@ -122,73 +125,6 @@ class _CustomTabSwitchState extends State<CustomTabSwitch>
           ),
         );
       },
-    );
-  }
-}
-
-class _Indicator extends StatelessWidget {
-  const _Indicator();
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: ColorsManager.primary,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: ColorsManager.primary.withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TabItem extends StatelessWidget {
-  final String title;
-  final int index;
-  final AnimationController controller;
-  final Color unselectedColor;
-  final VoidCallback onTap;
-
-  const _TabItem({
-    required this.title,
-    required this.index,
-    required this.controller,
-    required this.unselectedColor,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Center(
-          child: AnimatedBuilder(
-            animation: controller,
-            builder: (context, _) {
-              final isHighlighted = controller.value.round() == index;
-              return AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 200),
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isHighlighted ? Colors.white : unselectedColor,
-                ),
-                child: Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              );
-            },
-          ),
-        ),
-      ),
     );
   }
 }

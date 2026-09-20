@@ -12,9 +12,10 @@ class HomeBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ThemeCubit, ThemeState>(
-      buildWhen: (_, state) => state is ThemeChangeThemeState,
+      buildWhen: (_, state) =>
+          state is ThemeChangeThemeState || state is ThemeLanguageUpdatedState,
       builder: (context, state) {
-        final isDark = themeCubit.isDarkMode;
+        final isDark = ThemeCubit.get(context).isDarkMode;
         return Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(

@@ -12,7 +12,7 @@ class SongItemDefaultArtwork extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = themeCubit.isDarkMode;
+    final isDark = ThemeCubit.get(context).isDarkMode;
     return Container(
       decoration: BoxDecoration(
         color: isPlaying

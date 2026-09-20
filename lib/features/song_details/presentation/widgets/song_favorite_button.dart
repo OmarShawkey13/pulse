@@ -21,7 +21,9 @@ class SongFavoriteButton extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         backgroundColor: isFav
             ? ColorsManager.primary.withValues(alpha: 0.2)
-            : (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+            : (isDark ? ColorsManager.white : ColorsManager.black).withValues(
+                alpha: 0.05,
+              ),
       ),
       icon: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
@@ -30,7 +32,7 @@ class SongFavoriteButton extends StatelessWidget {
           key: ValueKey(isFav),
           color: isFav
               ? ColorsManager.primary
-              : (isDark ? Colors.white70 : Colors.black54),
+              : (isDark ? ColorsManager.white70 : ColorsManager.black54),
           size: 28,
         ),
       ),

@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pulse/core/theme/colors.dart';
@@ -50,8 +51,9 @@ class _MusicAuraState extends State<MusicAura>
     return BlocBuilder<HomeCubit, HomeStates>(
       buildWhen: (prev, curr) => curr is HomeWaveColorUpdated,
       builder: (context, state) {
-        final isDark = themeCubit.isDarkMode;
-        final auraColor = homeCubit.waveColor ?? ColorsManager.primary;
+        final isDark = ThemeCubit.get(context).isDarkMode;
+        final auraColor =
+            HomeCubit.get(context).waveColor ?? ColorsManager.primary;
 
         final surfaceColor = isDark
             ? ColorsManager.darkBackground
@@ -89,7 +91,7 @@ class _MusicAuraState extends State<MusicAura>
                     center: const Alignment(0, -0.2),
                     radius: 1.3,
                     colors: [
-                      Colors.transparent,
+                      ColorsManager.transparent,
                       surfaceColor.withValues(alpha: 0.4),
                       surfaceColor,
                     ],

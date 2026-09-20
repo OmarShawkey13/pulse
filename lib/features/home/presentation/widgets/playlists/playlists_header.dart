@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/theme/text_styles.dart';
+import 'package:pulse/core/utils/constants/constants.dart';
 import 'package:pulse/features/home/presentation/widgets/playlists/create_playlist_dialog.dart';
 
 class PlaylistsHeader extends StatelessWidget {
@@ -16,7 +17,7 @@ class PlaylistsHeader extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Your Library',
+            appTranslation().get('your_library'),
             style: TextStylesManager.bold24.copyWith(
               color: isDark
                   ? ColorsManager.darkTextPrimary

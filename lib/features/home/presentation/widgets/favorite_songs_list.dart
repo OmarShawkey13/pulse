@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pulse/core/theme/text_styles.dart';
+import 'package:pulse/core/utils/constants/constants.dart';
 import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
 import 'package:pulse/core/utils/cubit/home/home_state.dart';
 import 'package:pulse/features/home/presentation/widgets/song_list/song_item.dart';
@@ -20,10 +21,11 @@ class FavoriteSongsList extends StatelessWidget {
           state is HomeFavoritesLoadedState ||
           state is HomeFavoriteToggledState,
       builder: (context, state) {
-        if (homeCubit.favorites.isEmpty) {
+        final home = HomeCubit.get(context);
+        if (home.favorites.isEmpty) {
           return Center(
             child: Text(
-              'No Favorites Yet',
+              appTranslation().get('no_favorites_yet'),
               style: TextStylesManager.medium16,
             ),
           );
@@ -31,14 +33,14 @@ class FavoriteSongsList extends StatelessWidget {
         return ListView.builder(
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 100),
-          itemCount: homeCubit.favorites.length,
+          itemCount: home.favorites.length,
           itemBuilder: (_, index) {
-            final song = homeCubit.favorites[index];
-            final isPlaying = homeCubit.currentSongPath == song.path;
+            final song = home.favorites[index];
+            final isPlaying = home.currentSongPath == song.path;
             return SongItem(
               song: song,
               isPlaying: isPlaying,
-              queue: homeCubit.favorites.map((e) => e.path).toList(),
+              queue: home.favorites.map((e) => e.path).toList(),
             );
           },
         );

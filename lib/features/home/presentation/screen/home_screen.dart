@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
 import 'package:pulse/core/utils/cubit/home/home_state.dart';
+import 'package:pulse/core/utils/constants/constants.dart';
 import 'package:pulse/features/home/presentation/widgets/custom_tab_switch.dart';
 import 'package:pulse/features/home/presentation/widgets/home_app_bar.dart';
 import 'package:pulse/features/home/presentation/widgets/home_background.dart';
@@ -23,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    homeCubit.loadSongs();
+    HomeCubit.get(context).loadSongs();
   }
 
   @override
@@ -43,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final home = HomeCubit.get(context);
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: _isPlayerExpanded ? null : const HomeAppBar(),
@@ -58,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     current is HomeLoadSongsSuccessState,
                 listener: (context, state) {
                   if (state is HomeTabChangedState) {
-                    final target = homeCubit.selectedTabIndex;
+                    final target = home.selectedTabIndex;
                     if (_pageController.hasClients) {
                       final current = _pageController.page?.round() ?? 0;
                       if (current != target) {
@@ -80,13 +82,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   return Column(
                     children: [
                       CustomTabSwitch(
-                        selectedIndex: homeCubit.selectedTabIndex,
-                        onTap: (index) => homeCubit.changeTab(index),
-                        tabs: const [
-                          'Songs',
-                          'Recent',
-                          'Favorite',
-                          'Playlists',
+                        selectedIndex: home.selectedTabIndex,
+                        onTap: home.changeTab,
+                        tabs: [
+                          appTranslation().get('songs'),
+                          appTranslation().get('recent'),
+                          appTranslation().get('favorite'),
+                          appTranslation().get('playlists'),
                         ],
                       ),
                       HomePagesView(
@@ -95,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           if (_targetPage != null && _targetPage != index) {
                             return;
                           }
-                          homeCubit.changeTab(index);
+                          home.changeTab(index);
                         },
                       ),
                     ],

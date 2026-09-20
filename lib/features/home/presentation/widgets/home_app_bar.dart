@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pulse/core/theme/colors.dart';
+import 'package:pulse/core/theme/text_styles.dart';
+import 'package:pulse/core/utils/constants/constants.dart';
 import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
 import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
 import 'package:pulse/core/utils/cubit/theme/theme_state.dart';
@@ -13,17 +15,27 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ThemeCubit, ThemeState>(
-      buildWhen: (_, state) => state is ThemeChangeThemeState,
+      buildWhen: (_, state) =>
+          state is ThemeChangeThemeState || state is ThemeLanguageUpdatedState,
       builder: (context, state) {
-        final isDark = themeCubit.isDarkMode;
+        final theme = ThemeCubit.get(context);
+        final home = HomeCubit.get(context);
+        final isDark = theme.isDarkMode;
         return AppBar(
-          title: const Text('Pulse Music'),
+          title: Text(
+            appTranslation().get('app_title'),
+            style: TextStylesManager.bold20.copyWith(
+              color: isDark
+                  ? ColorsManager.darkTextPrimary
+                  : ColorsManager.lightTextPrimary,
+            ),
+          ),
           actions: [
             IconButton(
               onPressed: () {
                 showSearch(
                   context: context,
-                  delegate: SongSearchDelegate(homeCubit.songs),
+                  delegate: SongSearchDelegate(home.songs),
                 );
               },
               icon: Icon(
@@ -34,7 +46,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             ),
             IconButton(
-              onPressed: themeCubit.changeTheme,
+              onPressed: () => theme.changeTheme(),
               icon: Icon(
                 isDark ? Icons.wb_sunny : Icons.nightlight_round,
                 color: isDark

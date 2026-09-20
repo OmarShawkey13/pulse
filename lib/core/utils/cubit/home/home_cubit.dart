@@ -4,24 +4,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pulse/core/di/injections.dart';
 import 'package:pulse/core/models/music_model.dart';
+import 'package:pulse/core/errors/either.dart';
+import 'package:pulse/core/errors/failures.dart';
 import 'package:pulse/core/network/local/cache_helper.dart';
 import 'package:pulse/core/network/local/database_helper.dart';
 import 'package:pulse/core/network/service/palette_service.dart';
 import 'package:pulse/core/network/service/pulse_audio_handler.dart';
 import 'package:pulse/core/utils/cubit/home/home_state.dart';
-import 'package:pulse/main.dart';
-
-HomeCubit get homeCubit => HomeCubit.get(navigatorKey.currentContext!);
+import 'package:pulse/core/utils/constants/constants.dart';
 
 class HomeCubit extends Cubit<HomeStates> {
   final PulseAudioHandler _audioHandler = sl<PulseAudioHandler>();
   final audio.OnAudioQuery _audioQuery = audio.OnAudioQuery();
+  final DatabaseHelper _databaseHelper;
+  final PaletteService _paletteService = sl<PaletteService>();
 
   PulseAudioHandler get audioHandler => _audioHandler;
 
   static HomeCubit get(BuildContext context) => BlocProvider.of(context);
 
-  HomeCubit() : super(HomeInitialState());
+  HomeCubit({DatabaseHelper? databaseHelper})
+    : _databaseHelper = databaseHelper ?? DatabaseHelper.instance,
+      super(HomeInitialState());
 
   // Variables
   List<String> _queue = [];
@@ -59,8 +63,12 @@ class HomeCubit extends Cubit<HomeStates> {
 
   // Initialization
   void initializeAudioHandler() {
-    _audioHandler.onSkipToNext = playNext;
-    _audioHandler.onSkipToPrevious = playPrevious;
+    _audioHandler.onSkipToNext = () async {
+      await playNext();
+    };
+    _audioHandler.onSkipToPrevious = () async {
+      await playPrevious();
+    };
     _audioHandler.onSongFinished = _onSongFinished;
 
     _audioHandler.playbackState.listen((state) {
@@ -74,34 +82,48 @@ class HomeCubit extends Cubit<HomeStates> {
   }
 
   // Audio Controls
-  Future<void> seek(Duration position) => _audioHandler.seek(position);
-
-  Future<void> playSong(String path, {List<String>? queue}) async {
-    if (queue != null) setQueue(queue);
-
-    final index = _queue.indexOf(path);
-    if (index == -1) return;
-
-    _currentIndex = index;
-
-    _resetWaveColor();
-    emit(HomePlayerPlayState(path));
-
-    loadWavePalette();
-
-    final song = _getSongDetails(path);
-
-    // Only set song if it's different to avoid reloading
-    if (_audioHandler.mediaItem.value?.id != path) {
-      await _audioHandler.setSong(
-        path,
-        title: song.title,
-        artist: song.artist,
-        id: song.id,
-      );
+  Future<Either<Failure, void>> seek(Duration position) async {
+    try {
+      await _audioHandler.seek(position);
+      return const Right(null);
+    } catch (_) {
+      return const Left(AudioFailure());
     }
+  }
 
-    await _audioHandler.play();
+  Future<Either<Failure, void>> playSong(
+    String path, {
+    List<String>? queue,
+  }) async {
+    try {
+      if (queue != null) setQueue(queue);
+
+      final index = _queue.indexOf(path);
+      if (index == -1) return const Left(AudioFailure());
+
+      _currentIndex = index;
+
+      _resetWaveColor();
+      emit(HomePlayerPlayState(path));
+
+      loadWavePalette();
+
+      final song = _getSongDetails(path);
+
+      if (_audioHandler.mediaItem.value?.id != path) {
+        await _audioHandler.setSong(
+          path,
+          title: song.title,
+          artist: song.artist,
+          id: song.id,
+        );
+      }
+
+      await _audioHandler.play();
+      return const Right(null);
+    } catch (_) {
+      return const Left(AudioFailure());
+    }
   }
 
   Future<void> _onSongFinished() async {
@@ -116,86 +138,116 @@ class HomeCubit extends Cubit<HomeStates> {
     await playNext();
   }
 
-  Future<void> playNext() async {
-    final isRepeatAll =
-        _audioHandler.playbackState.value.repeatMode ==
-        AudioServiceRepeatMode.all;
+  Future<Either<Failure, void>> playNext() async {
+    try {
+      final isRepeatAll =
+          _audioHandler.playbackState.value.repeatMode ==
+          AudioServiceRepeatMode.all;
 
-    if (!hasNext) {
-      if (!isRepeatAll || _queue.isEmpty) return;
-      _currentIndex = -1; // Prepare to wrap around
-    }
-
-    _currentIndex++;
-    await _changeSongAtIndex();
-    emit(HomePlayerNextState(_queue[_currentIndex]));
-  }
-
-  Future<void> playPrevious() async {
-    final isRepeatAll =
-        _audioHandler.playbackState.value.repeatMode ==
-        AudioServiceRepeatMode.all;
-
-    if (!hasPrevious) {
-      if (!isRepeatAll || _queue.isEmpty) return;
-      _currentIndex = _queue.length; // Prepare to wrap around
-    }
-
-    _currentIndex--;
-    await _changeSongAtIndex();
-    emit(HomePlayerPreviousState(_queue[_currentIndex]));
-  }
-
-  Future<void> pauseSong() async {
-    await _audioHandler.pause();
-    emit(HomePlayerPauseState());
-  }
-
-  Future<void> stopSong() async {
-    await _audioHandler.stop();
-    emit(HomePlayerStopState());
-  }
-
-  Future<void> cycleRepeatMode() async {
-    final currentMode = _audioHandler.playbackState.value.repeatMode;
-    final nextMode = switch (currentMode) {
-      AudioServiceRepeatMode.none => AudioServiceRepeatMode.all,
-      AudioServiceRepeatMode.all => AudioServiceRepeatMode.one,
-      AudioServiceRepeatMode.one => AudioServiceRepeatMode.none,
-      _ => AudioServiceRepeatMode.none,
-    };
-    await _audioHandler.setRepeatMode(nextMode);
-  }
-
-  Future<void> toggleShuffle() async {
-    _isShuffle = !_isShuffle;
-
-    if (_isShuffle) {
-      _originalQueue = List.from(_queue);
-      final currentSong = currentSongPath;
-
-      _queue.shuffle();
-
-      if (currentSong != null) {
-        _queue.remove(currentSong);
-        _queue.insert(0, currentSong);
-        _currentIndex = 0;
+      if (!hasNext) {
+        if (!isRepeatAll || _queue.isEmpty) return const Left(AudioFailure());
+        _currentIndex = -1;
       }
-    } else {
-      final currentSong = currentSongPath;
-      if (_originalQueue.isNotEmpty) {
-        _queue = List.from(_originalQueue);
+
+      _currentIndex++;
+      await _changeSongAtIndex();
+      emit(HomePlayerNextState(_queue[_currentIndex]));
+      return const Right(null);
+    } catch (_) {
+      return const Left(AudioFailure());
+    }
+  }
+
+  Future<Either<Failure, void>> playPrevious() async {
+    try {
+      final isRepeatAll =
+          _audioHandler.playbackState.value.repeatMode ==
+          AudioServiceRepeatMode.all;
+
+      if (!hasPrevious) {
+        if (!isRepeatAll || _queue.isEmpty) return const Left(AudioFailure());
+        _currentIndex = _queue.length;
+      }
+
+      _currentIndex--;
+      await _changeSongAtIndex();
+      emit(HomePlayerPreviousState(_queue[_currentIndex]));
+      return const Right(null);
+    } catch (_) {
+      return const Left(AudioFailure());
+    }
+  }
+
+  Future<Either<Failure, void>> pauseSong() async {
+    try {
+      await _audioHandler.pause();
+      emit(HomePlayerPauseState());
+      return const Right(null);
+    } catch (_) {
+      return const Left(AudioFailure());
+    }
+  }
+
+  Future<Either<Failure, void>> stopSong() async {
+    try {
+      await _audioHandler.stop();
+      emit(HomePlayerStopState());
+      return const Right(null);
+    } catch (_) {
+      return const Left(AudioFailure());
+    }
+  }
+
+  Future<Either<Failure, void>> cycleRepeatMode() async {
+    try {
+      final currentMode = _audioHandler.playbackState.value.repeatMode;
+      final nextMode = switch (currentMode) {
+        AudioServiceRepeatMode.none => AudioServiceRepeatMode.all,
+        AudioServiceRepeatMode.all => AudioServiceRepeatMode.one,
+        AudioServiceRepeatMode.one => AudioServiceRepeatMode.none,
+        _ => AudioServiceRepeatMode.none,
+      };
+      await _audioHandler.setRepeatMode(nextMode);
+      return const Right(null);
+    } catch (_) {
+      return const Left(AudioFailure());
+    }
+  }
+
+  Future<Either<Failure, void>> toggleShuffle() async {
+    try {
+      _isShuffle = !_isShuffle;
+
+      if (_isShuffle) {
+        _originalQueue = List.from(_queue);
+        final currentSong = currentSongPath;
+
+        _queue.shuffle();
+
         if (currentSong != null) {
-          _currentIndex = _queue.indexOf(currentSong);
+          _queue.remove(currentSong);
+          _queue.insert(0, currentSong);
+          _currentIndex = 0;
+        }
+      } else {
+        final currentSong = currentSongPath;
+        if (_originalQueue.isNotEmpty) {
+          _queue = List.from(_originalQueue);
+          if (currentSong != null) {
+            _currentIndex = _queue.indexOf(currentSong);
+          }
         }
       }
+
+      await _audioHandler.setShuffleMode(
+        _isShuffle ? AudioServiceShuffleMode.all : AudioServiceShuffleMode.none,
+      );
+
+      emit(HomeShuffleChanged(_isShuffle));
+      return const Right(null);
+    } catch (_) {
+      return const Left(AudioFailure());
     }
-
-    await _audioHandler.setShuffleMode(
-      _isShuffle ? AudioServiceShuffleMode.all : AudioServiceShuffleMode.none,
-    );
-
-    emit(HomeShuffleChanged(_isShuffle));
   }
 
   // Helper for next/previous navigation
@@ -220,7 +272,9 @@ class HomeCubit extends Cubit<HomeStates> {
   }
 
   // Data Loading
-  Future<void> loadSongs({bool retry = false}) async {
+  Future<Either<Failure, List<MusicModel>>> loadSongs({
+    bool retry = false,
+  }) async {
     emit(HomeLoadSongsLoadingState());
 
     try {
@@ -229,8 +283,9 @@ class HomeCubit extends Cubit<HomeStates> {
       );
 
       if (!hasPermission) {
-        emit(HomeLoadSongsErrorState('Permission denied'));
-        return;
+        const failure = PermissionFailure();
+        emit(HomeLoadSongsErrorState(failure.messageKey));
+        return const Left(failure);
       }
 
       final result = await _audioQuery.querySongs(
@@ -254,7 +309,7 @@ class HomeCubit extends Cubit<HomeStates> {
         path: e.data,
         title: e.title,
         artist: (e.artist == null || e.artist == '<unknown>')
-            ? 'Unknown'
+            ? appTranslation().get('unknown')
             : e.artist!,
         album: e.album,
         duration: e.duration,
@@ -276,65 +331,139 @@ class HomeCubit extends Cubit<HomeStates> {
       await loadPlaylists();
 
       emit(HomeLoadSongsSuccessState(songs));
+      return Right(songs);
     } catch (e) {
-      emit(HomeLoadSongsErrorState(e.toString()));
+      const failure = AudioFailure();
+      emit(HomeLoadSongsErrorState(failure.messageKey));
+      return const Left(failure);
     }
   }
 
   // --- Playlists ---
-  Future<void> loadPlaylists() async {
+  Future<Either<Failure, List<Map<String, dynamic>>>> loadPlaylists() async {
     emit(HomePlaylistsLoadingState());
-    playlists = await DatabaseHelper.instance.getPlaylists();
-    emit(HomePlaylistsLoadedState(playlists));
+    final result = await _databaseHelper.getPlaylists();
+    return result.fold<Either<Failure, List<Map<String, dynamic>>>>(
+      (failure) {
+        emit(HomeOperationErrorState(failure.messageKey));
+        return Left(failure);
+      },
+      (value) {
+        playlists = value;
+        emit(HomePlaylistsLoadedState(playlists));
+        return Right(value);
+      },
+    );
   }
 
-  Future<void> createPlaylist(String name) async {
-    await DatabaseHelper.instance.createPlaylist(name);
-    await loadPlaylists();
-    emit(HomePlaylistCreatedState());
+  Future<Either<Failure, void>> createPlaylist(String name) async {
+    final result = await _databaseHelper.createPlaylist(name);
+    return await result.fold<Future<Either<Failure, void>>>(
+      (failure) async {
+        emit(HomeOperationErrorState(failure.messageKey));
+        return Left(failure);
+      },
+      (_) async {
+        await loadPlaylists();
+        emit(HomePlaylistCreatedState());
+        return const Right(null);
+      },
+    );
   }
 
-  Future<void> deletePlaylist(int id) async {
-    await DatabaseHelper.instance.deletePlaylist(id);
-    await loadPlaylists();
-    emit(HomePlaylistDeletedState());
+  Future<Either<Failure, void>> deletePlaylist(int id) async {
+    final result = await _databaseHelper.deletePlaylist(id);
+    return await result.fold<Future<Either<Failure, void>>>(
+      (failure) async {
+        emit(HomeOperationErrorState(failure.messageKey));
+        return Left(failure);
+      },
+      (_) async {
+        await loadPlaylists();
+        emit(HomePlaylistDeletedState());
+        return const Right(null);
+      },
+    );
   }
 
-  Future<void> addSongToPlaylist({
+  Future<Either<Failure, void>> addSongToPlaylist({
     required int playlistId,
     required MusicModel song,
   }) async {
-    await DatabaseHelper.instance.addSongToPlaylist(
+    final result = await _databaseHelper.addSongToPlaylist(
       playlistId: playlistId,
       song: song,
     );
-    emit(HomeSongAddedToPlaylistState());
+    return await result.fold<Future<Either<Failure, void>>>(
+      (failure) async {
+        emit(HomeOperationErrorState(failure.messageKey));
+        return Left(failure);
+      },
+      (_) async {
+        emit(HomeSongAddedToPlaylistState());
+        return const Right(null);
+      },
+    );
   }
 
-  Future<void> removeSongFromPlaylist(int playlistId, int songId) async {
-    await DatabaseHelper.instance.removeSongFromPlaylist(playlistId, songId);
-    // Refresh if needed, or emit state
+  Future<Either<Failure, void>> removeSongFromPlaylist(
+    int playlistId,
+    int songId,
+  ) async {
+    final result = await _databaseHelper.removeSongFromPlaylist(
+      playlistId,
+      songId,
+    );
+    return await result.fold<Future<Either<Failure, void>>>(
+      (failure) async {
+        emit(HomeOperationErrorState(failure.messageKey));
+        return Left(failure);
+      },
+      (_) async => const Right(null),
+    );
   }
 
-  Future<List<MusicModel>> getPlaylistSongs(int playlistId) async {
-    return await DatabaseHelper.instance.getPlaylistSongs(playlistId);
+  Future<Either<Failure, List<MusicModel>>> getPlaylistSongs(
+    int playlistId,
+  ) async {
+    return await _databaseHelper.getPlaylistSongs(playlistId);
   }
 
   // Favorites
-  Future<void> loadFavorites() async {
-    favorites = await DatabaseHelper.instance.getFavorites();
-    emit(HomeFavoritesLoadedState(favorites));
+  Future<Either<Failure, List<MusicModel>>> loadFavorites() async {
+    final result = await _databaseHelper.getFavorites();
+    return await result.fold<Future<Either<Failure, List<MusicModel>>>>(
+      (failure) async {
+        emit(HomeOperationErrorState(failure.messageKey));
+        return Left(failure);
+      },
+      (value) async {
+        favorites = value;
+        emit(HomeFavoritesLoadedState(favorites));
+        return Right(value);
+      },
+    );
   }
 
-  Future<void> toggleFavorite(MusicModel song) async {
+  Future<Either<Failure, void>> toggleFavorite(MusicModel song) async {
     final isFav = isSongFavorite(song.id);
+    final Either<Failure, void> result;
     if (isFav) {
-      await DatabaseHelper.instance.removeFavorite(song.id);
+      result = await _databaseHelper.removeFavorite(song.id);
     } else {
-      await DatabaseHelper.instance.addFavorite(song);
+      result = await _databaseHelper.addFavorite(song);
     }
-    await loadFavorites();
-    emit(HomeFavoriteToggledState(!isFav));
+    return await result.fold<Future<Either<Failure, void>>>(
+      (failure) async {
+        emit(HomeOperationErrorState(failure.messageKey));
+        return Left(failure);
+      },
+      (_) async {
+        await loadFavorites();
+        emit(HomeFavoriteToggledState(!isFav));
+        return const Right(null);
+      },
+    );
   }
 
   bool isSongFavorite(int id) {
@@ -350,8 +479,12 @@ class HomeCubit extends Cubit<HomeStates> {
   MusicModel _getSongDetails(String path) {
     return songs.firstWhere(
       (e) => e.path == path,
-      orElse: () =>
-          MusicModel(id: 0, path: path, title: 'Unknown', artist: 'Unknown'),
+      orElse: () => MusicModel(
+        id: 0,
+        path: path,
+        title: appTranslation().get('unknown'),
+        artist: appTranslation().get('unknown'),
+      ),
     );
   }
 
@@ -381,10 +514,15 @@ class HomeCubit extends Cubit<HomeStates> {
   }
 
   Future<void> _restoreLastPlayedSong() async {
-    final lastPath = CacheHelper.getData(key: 'last_song_path');
-    final lastPositionSeconds = CacheHelper.getData(key: 'last_song_position');
-    final lastQueue = CacheHelper.getData(key: 'last_queue');
-    final lastRepeatMode = CacheHelper.getData(key: 'repeat_mode');
+    dynamic readCache(String key) => CacheHelper.getData(key: key).fold(
+      (_) => null,
+      (value) => value,
+    );
+
+    final lastPath = readCache('last_song_path');
+    final lastPositionSeconds = readCache('last_song_position');
+    final lastQueue = readCache('last_queue');
+    final lastRepeatMode = readCache('repeat_mode');
 
     // Restore Queue if exists
     if (lastQueue != null && lastQueue is List) {
@@ -428,8 +566,10 @@ class HomeCubit extends Cubit<HomeStates> {
     emit(HomePlayerPauseState());
   }
 
-  Future<void> loadWavePalette() async {
-    if (currentSongPath == null) return;
+  Future<Either<Failure, Color>> loadWavePalette() async {
+    if (currentSongPath == null) {
+      return const Left(PaletteFailure());
+    }
 
     try {
       final song = songs.firstWhere(
@@ -445,14 +585,25 @@ class HomeCubit extends Cubit<HomeStates> {
 
       if (bytes == null) {
         _resetWaveColor();
-        return;
+        return const Left(PaletteFailure());
       }
 
-      waveColor = await PaletteService.extractDominantColorFromBytes(bytes);
-      emit(HomeWaveColorUpdated());
+      final result = await _paletteService.extractDominantColorFromBytes(bytes);
+      return await result.fold(
+        (failure) {
+          _resetWaveColor();
+          return Left(failure);
+        },
+        (color) {
+          waveColor = color;
+          emit(HomeWaveColorUpdated());
+          return Right(color);
+        },
+      );
     } catch (e) {
       debugPrint('Error loading palette: $e');
       _resetWaveColor();
+      return const Left(PaletteFailure());
     }
   }
 }

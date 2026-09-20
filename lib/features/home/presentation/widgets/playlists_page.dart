@@ -19,8 +19,9 @@ class PlaylistsPage extends StatelessWidget {
           current is HomePlaylistCreatedState ||
           current is HomePlaylistDeletedState,
       builder: (context, state) {
-        final playlists = homeCubit.playlists;
-        final isDark = themeCubit.isDarkMode;
+        final home = HomeCubit.get(context);
+        final isDark = ThemeCubit.get(context).isDarkMode;
+        final playlists = home.playlists;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

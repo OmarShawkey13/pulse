@@ -1,31 +1,48 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pulse/core/di/injections.dart';
+import 'package:pulse/core/errors/either.dart';
+import 'package:pulse/core/errors/failures.dart';
 
 class CacheHelper {
-  static dynamic getData({required String key}) {
-    final prefs = sl<SharedPreferences>();
-    return prefs.get(key);
+  static Either<Failure, dynamic> getData({required String key}) {
+    try {
+      final prefs = sl<SharedPreferences>();
+      return Right(prefs.get(key));
+    } catch (_) {
+      return const Left(CacheFailure());
+    }
   }
 
-  static Future<bool> saveData({
+  static Future<Either<Failure, bool>> saveData({
     required String key,
     required dynamic value,
   }) async {
-    final prefs = sl<SharedPreferences>();
-
-    if (value is String) return await prefs.setString(key, value);
-    if (value is int) return await prefs.setInt(key, value);
-    if (value is bool) return await prefs.setBool(key, value);
-    if (value is double) return await prefs.setDouble(key, value);
-    if (value is List<String>) return await prefs.setStringList(key, value);
-
-    throw ArgumentError(
-      'Unsupported type for SharedPreferences: ${value.runtimeType}',
-    );
+    try {
+      final prefs = sl<SharedPreferences>();
+      final saved = value is String
+          ? await prefs.setString(key, value)
+          : value is int
+          ? await prefs.setInt(key, value)
+          : value is bool
+          ? await prefs.setBool(key, value)
+          : value is double
+          ? await prefs.setDouble(key, value)
+          : value is List<String>
+          ? await prefs.setStringList(key, value)
+          : false;
+      return saved ? const Right(true) : const Left(CacheFailure());
+    } catch (_) {
+      return const Left(CacheFailure());
+    }
   }
 
-  static Future<bool> removeData({required String key}) async {
-    final prefs = sl<SharedPreferences>();
-    return await prefs.remove(key);
+  static Future<Either<Failure, bool>> removeData({required String key}) async {
+    try {
+      final prefs = sl<SharedPreferences>();
+      final removed = await prefs.remove(key);
+      return removed ? const Right(true) : const Left(CacheFailure());
+    } catch (_) {
+      return const Left(CacheFailure());
+    }
   }
 }

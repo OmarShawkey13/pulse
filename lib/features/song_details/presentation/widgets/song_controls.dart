@@ -16,7 +16,9 @@ class SongControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = themeCubit.isDarkMode;
+    final theme = ThemeCubit.get(context);
+    final home = HomeCubit.get(context);
+    final isDark = theme.isDarkMode;
 
     return BlocBuilder<HomeCubit, HomeStates>(
       buildWhen: (prev, curr) =>
@@ -27,10 +29,10 @@ class SongControls extends StatelessWidget {
           curr is HomePlayerPreviousState ||
           curr is HomeShuffleChanged,
       builder: (context, state) {
-        final auraColor = homeCubit.waveColor ?? ColorsManager.primary;
+        final auraColor = home.waveColor ?? ColorsManager.primary;
 
         return StreamBuilder<PlaybackState>(
-          stream: homeCubit.playbackStateStream,
+          stream: home.playbackStateStream,
           builder: (context, snapshot) {
             final playing = snapshot.data?.playing ?? false;
             final repeatMode =
@@ -47,7 +49,7 @@ class SongControls extends StatelessWidget {
                       ? Icons.shuffle_on_rounded
                       : Icons.shuffle_rounded,
                   isActive: shuffleMode == AudioServiceShuffleMode.all,
-                  onTap: homeCubit.toggleShuffle,
+                  onTap: home.toggleShuffle,
                   activeColor: auraColor,
                 ),
 
@@ -57,7 +59,7 @@ class SongControls extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
-                        onPressed: homeCubit.playPrevious,
+                        onPressed: home.playPrevious,
                         iconSize: 38, // Reduced size to prevent overflow
                         icon: Icon(
                           Icons.skip_previous_rounded,
@@ -74,7 +76,7 @@ class SongControls extends StatelessWidget {
                       ),
                       horizontalSpace12, // Reduced spacing
                       IconButton(
-                        onPressed: homeCubit.playNext,
+                        onPressed: home.playNext,
                         iconSize: 38, // Reduced size
                         icon: Icon(
                           Icons.skip_next_rounded,
@@ -93,7 +95,7 @@ class SongControls extends StatelessWidget {
                       ? Icons.repeat_one_rounded
                       : Icons.repeat_rounded,
                   isActive: repeatMode != AudioServiceRepeatMode.none,
-                  onTap: homeCubit.cycleRepeatMode,
+                  onTap: home.cycleRepeatMode,
                   activeColor: auraColor,
                 ),
               ],

@@ -18,6 +18,7 @@ class HomeContent extends StatelessWidget {
           current is HomeLoadSongsErrorState ||
           current is HomeLoadSongsSuccessState,
       builder: (context, state) {
+        final home = HomeCubit.get(context);
         return ConditionalBuilder(
           loadingState: state is HomeLoadSongsLoadingState,
           loadingBuilder: (_) => ListView.builder(
@@ -25,9 +26,13 @@ class HomeContent extends StatelessWidget {
             itemCount: 10,
             itemBuilder: (_, _) => const SongItemLoading(),
           ),
-          errorState: homeCubit.songs.isEmpty,
+          errorState: state is HomeLoadSongsErrorState,
           successBuilder: (_) => const SongsList(),
-          errorBuilder: (_) => const HomeErrorWidget(error: 'No songs found'),
+          errorBuilder: (_) => HomeErrorWidget(
+            error: home.songs.isEmpty
+                ? 'no_songs_found'
+                : (state as HomeLoadSongsErrorState).error,
+          ),
         );
       },
     );

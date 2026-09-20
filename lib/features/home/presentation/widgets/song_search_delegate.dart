@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:pulse/core/models/music_model.dart';
 import 'package:pulse/core/theme/colors.dart';
-import 'package:pulse/core/utils/constants/spacing.dart';
-import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
-import 'package:pulse/features/home/presentation/widgets/song_list/song_item.dart';
+import 'package:pulse/core/theme/text_styles.dart';
+import 'package:pulse/core/theme/theme.dart';
+import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
+import 'package:pulse/features/home/presentation/widgets/song_search_results.dart';
 
 class SongSearchDelegate extends SearchDelegate {
   final List<MusicModel> songs;
@@ -12,11 +13,15 @@ class SongSearchDelegate extends SearchDelegate {
 
   @override
   ThemeData appBarTheme(BuildContext context) {
-    final theme = Theme.of(context);
+    final theme = ThemeCubit.get(context).isDarkMode
+        ? AppTheme.darkTheme
+        : AppTheme.lightTheme;
     return theme.copyWith(
-      inputDecorationTheme: const InputDecorationTheme(
+      inputDecorationTheme: InputDecorationTheme(
         border: InputBorder.none,
-        hintStyle: TextStyle(color: Colors.grey),
+        hintStyle: TextStylesManager.regular16.copyWith(
+          color: ColorsManager.grey,
+        ),
       ),
     );
   }
@@ -46,61 +51,11 @@ class SongSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildResults(BuildContext context) {
-    return _buildSearchResults();
+    return SongSearchResults(songs: songs, query: query);
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    return _buildSearchResults();
-  }
-
-  Widget _buildSearchResults() {
-    final suggestions = songs.where((song) {
-      final titleLower = song.title.toLowerCase();
-      final artistLower = song.artist.toLowerCase();
-      final searchLower = query.toLowerCase();
-
-      return titleLower.contains(searchLower) ||
-          artistLower.contains(searchLower);
-    }).toList();
-
-    if (suggestions.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.search_off_rounded,
-              size: 80,
-              color: ColorsManager.primary.withValues(alpha: 0.5),
-            ),
-            verticalSpace16,
-            const Text(
-              'No songs found',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.only(top: 10, bottom: 100),
-      itemCount: suggestions.length,
-      itemBuilder: (context, index) {
-        final song = suggestions[index];
-        return StreamBuilder(
-          stream: homeCubit.audioHandler.mediaItem,
-          builder: (context, snapshot) {
-            final isPlaying = snapshot.data?.id == song.path;
-            return SongItem(
-              song: song,
-              isPlaying: isPlaying,
-              queue: suggestions.map((e) => e.path).toList(),
-            );
-          },
-        );
-      },
-    );
+    return SongSearchResults(songs: songs, query: query);
   }
 }

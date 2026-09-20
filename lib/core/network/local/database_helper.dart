@@ -1,4 +1,6 @@
 import 'package:path/path.dart';
+import 'package:pulse/core/errors/either.dart';
+import 'package:pulse/core/errors/failures.dart';
 import 'package:pulse/core/models/music_model.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -66,101 +68,143 @@ class DatabaseHelper {
     ''');
   }
 
-  Future<void> addFavorite(MusicModel song) async {
-    final db = await instance.database;
-    await db.insert(
-      'favorites',
-      {
-        ...song.toMap(),
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+  Future<Either<Failure, void>> addFavorite(MusicModel song) async {
+    try {
+      final db = await instance.database;
+      await db.insert(
+        'favorites',
+        {
+          ...song.toMap(),
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      return const Right(null);
+    } catch (_) {
+      return const Left(DatabaseFailure());
+    }
   }
 
-  Future<void> removeFavorite(int id) async {
-    final db = await instance.database;
-    await db.delete(
-      'favorites',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+  Future<Either<Failure, void>> removeFavorite(int id) async {
+    try {
+      final db = await instance.database;
+      await db.delete('favorites', where: 'id = ?', whereArgs: [id]);
+      return const Right(null);
+    } catch (_) {
+      return const Left(DatabaseFailure());
+    }
   }
 
-  Future<bool> isFavorite(int id) async {
-    final db = await instance.database;
-    final maps = await db.query(
-      'favorites',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    return maps.isNotEmpty;
+  Future<Either<Failure, bool>> isFavorite(int id) async {
+    try {
+      final db = await instance.database;
+      final maps = await db.query(
+        'favorites',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      return Right(maps.isNotEmpty);
+    } catch (_) {
+      return const Left(DatabaseFailure());
+    }
   }
 
-  Future<List<MusicModel>> getFavorites() async {
-    final db = await instance.database;
-    final maps = await db.query(
-      'favorites',
-      orderBy: 'timestamp DESC',
-    );
-
-    return maps.map((e) => MusicModel.fromMap(e)).toList();
+  Future<Either<Failure, List<MusicModel>>> getFavorites() async {
+    try {
+      final db = await instance.database;
+      final maps = await db.query('favorites', orderBy: 'timestamp DESC');
+      return Right(maps.map((e) => MusicModel.fromMap(e)).toList());
+    } catch (_) {
+      return const Left(DatabaseFailure());
+    }
   }
 
   // --- Playlists Methods ---
 
-  Future<int> createPlaylist(String name) async {
-    final db = await instance.database;
-    return await db.insert('playlists', {
-      'name': name,
-      'createdAt': DateTime.now().millisecondsSinceEpoch,
-    });
+  Future<Either<Failure, int>> createPlaylist(String name) async {
+    try {
+      final db = await instance.database;
+      final id = await db.insert('playlists', {
+        'name': name,
+        'createdAt': DateTime.now().millisecondsSinceEpoch,
+      });
+      return Right(id);
+    } catch (_) {
+      return const Left(DatabaseFailure());
+    }
   }
 
-  Future<List<Map<String, dynamic>>> getPlaylists() async {
-    final db = await instance.database;
-    return await db.query('playlists', orderBy: 'createdAt DESC');
+  Future<Either<Failure, List<Map<String, dynamic>>>> getPlaylists() async {
+    try {
+      final db = await instance.database;
+      return Right(await db.query('playlists', orderBy: 'createdAt DESC'));
+    } catch (_) {
+      return const Left(DatabaseFailure());
+    }
   }
 
-  Future<void> deletePlaylist(int id) async {
-    final db = await instance.database;
-    await db.delete('playlists', where: 'id = ?', whereArgs: [id]);
+  Future<Either<Failure, void>> deletePlaylist(int id) async {
+    try {
+      final db = await instance.database;
+      await db.delete('playlists', where: 'id = ?', whereArgs: [id]);
+      return const Right(null);
+    } catch (_) {
+      return const Left(DatabaseFailure());
+    }
   }
 
-  Future<void> addSongToPlaylist({
+  Future<Either<Failure, void>> addSongToPlaylist({
     required int playlistId,
     required MusicModel song,
   }) async {
-    final db = await instance.database;
-    await db.insert('playlist_songs', {
-      'playlistId': playlistId,
-      'songId': song.id,
-      'songPath': song.path,
-      'songTitle': song.title,
-      'songArtist': song.artist,
-      'songAlbum': song.album,
-      'songDuration': song.duration,
-      'songSize': song.size,
-    });
+    try {
+      final db = await instance.database;
+      await db.insert('playlist_songs', {
+        'playlistId': playlistId,
+        'songId': song.id,
+        'songPath': song.path,
+        'songTitle': song.title,
+        'songArtist': song.artist,
+        'songAlbum': song.album,
+        'songDuration': song.duration,
+        'songSize': song.size,
+      });
+      return const Right(null);
+    } catch (_) {
+      return const Left(DatabaseFailure());
+    }
   }
 
-  Future<void> removeSongFromPlaylist(int playlistId, int songId) async {
-    final db = await instance.database;
-    await db.delete(
-      'playlist_songs',
-      where: 'playlistId = ? AND songId = ?',
-      whereArgs: [playlistId, songId],
-    );
+  Future<Either<Failure, void>> removeSongFromPlaylist(
+    int playlistId,
+    int songId,
+  ) async {
+    try {
+      final db = await instance.database;
+      await db.delete(
+        'playlist_songs',
+        where: 'playlistId = ? AND songId = ?',
+        whereArgs: [playlistId, songId],
+      );
+      return const Right(null);
+    } catch (_) {
+      return const Left(DatabaseFailure());
+    }
   }
 
-  Future<List<MusicModel>> getPlaylistSongs(int playlistId) async {
-    final db = await instance.database;
-    final maps = await db.query(
-      'playlist_songs',
-      where: 'playlistId = ?',
-      whereArgs: [playlistId],
-    );
-
-    return maps.map((e) => MusicModel.fromMap(e)).toList();
+  Future<Either<Failure, List<MusicModel>>> getPlaylistSongs(
+    int playlistId,
+  ) async {
+    try {
+      final db = await instance.database;
+      final maps = await db.query(
+        'playlist_songs',
+        where: 'playlistId = ?',
+        whereArgs: [playlistId],
+      );
+      return Right(maps.map((e) => MusicModel.fromMap(e)).toList());
+    } catch (_) {
+      return const Left(DatabaseFailure());
+    }
   }
 }

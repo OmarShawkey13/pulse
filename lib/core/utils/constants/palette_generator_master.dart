@@ -4,6 +4,7 @@ import 'dart:ui' show Color, ImageByteFormat;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:pulse/core/theme/colors.dart';
 
 /// A description of an encoded image with enhanced metadata.
 class EncodedImageMaster {
@@ -672,7 +673,7 @@ class AccessibilityHelperMaster {
     Color backgroundColor, {
     double minimumContrast = 4.5,
   }) {
-    return Colors.white;
+    return ColorsManager.white;
   }
 }
 

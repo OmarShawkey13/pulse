@@ -1,5 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pulse/core/di/injections.dart';
 import 'package:pulse/core/network/local/cache_helper.dart';
@@ -29,20 +30,36 @@ void main() async {
   );
   await initInjections(audioHandler);
   Bloc.observer = MyBlocObserver();
-  final bool? isDarkMode = CacheHelper.getData(key: 'isDark');
+  final bool isDark = CacheHelper.getData(key: 'isDark').fold(
+    (_) => false,
+    (value) => value is bool ? value : false,
+  );
+  final bool isArabic = CacheHelper.getData(key: 'isArabicLang').fold(
+    (_) => false,
+    (value) => value is bool ? value : false,
+  );
+  final String translation = await rootBundle.loadString(
+    'assets/translations/${isArabic ? 'ar' : 'en'}.json',
+  );
   runApp(
     MyApp(
-      isDark: isDarkMode,
+      isDark: isDark,
+      isArabic: isArabic,
+      translation: translation,
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  final bool? isDark;
+  final bool isDark;
+  final bool isArabic;
+  final String translation;
 
   const MyApp({
     super.key,
     required this.isDark,
+    required this.isArabic,
+    required this.translation,
   });
 
   @override
@@ -54,13 +71,17 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider(
           create: (context) => sl<ThemeCubit>()
-            ..changeTheme(
-              fromShared: isDark,
+            ..changeTheme(fromShared: isDark)
+            ..changeLanguage(
+              isArabic: isArabic,
+              translations: translation,
             ),
         ),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
-        buildWhen: (previous, current) => current is ThemeChangeThemeState,
+        buildWhen: (previous, current) =>
+            current is ThemeChangeThemeState ||
+            current is ThemeLanguageUpdatedState,
         builder: (context, state) {
           final cubit = ThemeCubit.get(context);
           return MaterialApp(
@@ -71,6 +92,14 @@ class MyApp extends StatelessWidget {
             themeMode: cubit.isDarkMode ? ThemeMode.dark : ThemeMode.light,
             routes: Routes.routes,
             initialRoute: Routes.home,
+            builder: (context, child) {
+              return Directionality(
+                textDirection: ThemeCubit.get(context).isArabicLang
+                    ? .rtl
+                    : .ltr,
+                child: child!,
+              );
+            },
           );
         },
       ),

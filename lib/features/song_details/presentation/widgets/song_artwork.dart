@@ -4,6 +4,8 @@ import 'package:on_audio_query_pluse/on_audio_query.dart';
 import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
 import 'package:pulse/core/utils/cubit/home/home_state.dart';
+import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
+import 'package:pulse/features/song_details/presentation/widgets/song_artwork_placeholder.dart';
 
 class SongArtwork extends StatefulWidget {
   const SongArtwork({super.key});
@@ -40,7 +42,7 @@ class _SongArtworkState extends State<SongArtwork>
           state is HomePlayerPreviousState ||
           state is HomeWaveColorUpdated,
       builder: (context, state) {
-        final cubit = homeCubit;
+        final cubit = HomeCubit.get(context);
         final currentPath = cubit.currentSongPath;
 
         if (currentPath == null) return const SizedBox.shrink();
@@ -51,7 +53,7 @@ class _SongArtworkState extends State<SongArtwork>
         );
 
         final auraColor = cubit.waveColor ?? ColorsManager.primary;
-        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final isDark = ThemeCubit.get(context).isDarkMode;
 
         return Center(
           child: Stack(
@@ -119,7 +121,7 @@ class _SongArtworkState extends State<SongArtwork>
                       borderRadius: BorderRadius.circular(40),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.4),
+                          color: ColorsManager.black.withValues(alpha: 0.4),
                           blurRadius: 30,
                           offset: const Offset(0, 20),
                         ),
@@ -136,7 +138,9 @@ class _SongArtworkState extends State<SongArtwork>
                         quality: 100,
                         size: 1000,
                         format: ArtworkFormat.PNG,
-                        nullArtworkWidget: _buildPlaceholder(isDark),
+                        nullArtworkWidget: SongArtworkPlaceholder(
+                          isDark: isDark,
+                        ),
                       ),
                     ),
                   ),
@@ -146,17 +150,6 @@ class _SongArtworkState extends State<SongArtwork>
           ),
         );
       },
-    );
-  }
-
-  Widget _buildPlaceholder(bool isDark) {
-    return Container(
-      color: isDark ? ColorsManager.darkCard : ColorsManager.lightDivider,
-      child: Icon(
-        Icons.music_note_rounded,
-        size: 80,
-        color: ColorsManager.primary.withValues(alpha: 0.4),
-      ),
     );
   }
 }

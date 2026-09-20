@@ -44,5 +44,10 @@ class ColorsManager {
   // -------- OTHERS -------- //
   static const Color black = Color(0xFF000000);
   static const Color white = Color(0xFFFFFFFF);
+  static const Color white24 = Color(0x3DFFFFFF);
+  static const Color white70 = Color(0xB3FFFFFF);
+  static const Color black12 = Color(0x1F000000);
+  static const Color black54 = Color(0x8A000000);
+  static const Color grey = Color(0xFF9E9E9E);
   static const Color transparent = Color(0x00000000);
 }

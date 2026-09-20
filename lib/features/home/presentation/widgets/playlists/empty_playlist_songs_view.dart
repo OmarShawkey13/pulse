@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/theme/text_styles.dart';
 import 'package:pulse/core/utils/constants/spacing.dart';
+import 'package:pulse/core/utils/constants/constants.dart';
 
 class EmptyPlaylistSongsView extends StatelessWidget {
   final bool isDark;
@@ -26,7 +27,7 @@ class EmptyPlaylistSongsView extends StatelessWidget {
             ),
             verticalSpace16,
             Text(
-              'No songs in this playlist',
+              appTranslation().get('no_songs_in_playlist'),
               style: TextStylesManager.regular14.copyWith(
                 color: isDark
                     ? ColorsManager.darkTextSecondary

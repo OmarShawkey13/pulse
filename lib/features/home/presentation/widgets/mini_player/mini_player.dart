@@ -1,4 +1,5 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -72,7 +73,7 @@ class _MiniPlayerState extends State<MiniPlayer>
       child: BlocBuilder<HomeCubit, HomeStates>(
         buildWhen: (prev, curr) => _shouldRebuild(curr),
         builder: (context, state) {
-          final cubit = homeCubit;
+          final cubit = HomeCubit.get(context);
           final songPath = cubit.currentSongPath;
 
           if (songPath == null || cubit.songs.isEmpty) {
@@ -92,8 +93,8 @@ class _MiniPlayerState extends State<MiniPlayer>
               final currentHeight =
                   lerpDouble(_minHeight, _maxHeight, value) ?? _minHeight;
 
-              return SizedBox(
-                height: currentHeight,
+              return ConstrainedBox(
+                constraints: BoxConstraints.tightFor(height: currentHeight),
                 child: MiniPlayerGestureWrapper(
                   controller: _controller,
                   minHeight: _minHeight,

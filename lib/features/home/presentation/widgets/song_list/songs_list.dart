@@ -17,17 +17,18 @@ class SongsList extends StatelessWidget {
           state is HomePlayerNextState ||
           state is HomePlayerPreviousState,
       builder: (context, state) {
+        final home = HomeCubit.get(context);
         return ListView.builder(
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 100),
-          itemCount: homeCubit.songs.length,
+          itemCount: home.songs.length,
           itemBuilder: (_, index) {
-            final song = homeCubit.songs[index];
-            final isPlaying = homeCubit.currentSongPath == song.path;
+            final song = home.songs[index];
+            final isPlaying = home.currentSongPath == song.path;
             return SongItem(
               song: song,
               isPlaying: isPlaying,
-              queue: homeCubit.songs.map((e) => e.path).toList(),
+              queue: home.songs.map((e) => e.path).toList(),
             );
           },
         );

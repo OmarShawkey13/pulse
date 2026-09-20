@@ -4,6 +4,8 @@ import 'package:pulse/core/models/music_model.dart';
 import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/theme/text_styles.dart';
 import 'package:pulse/core/utils/constants/spacing.dart';
+import 'package:pulse/core/utils/constants/constants.dart';
+import 'package:pulse/core/utils/extensions/context_extension.dart';
 import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
 import 'package:pulse/core/utils/cubit/home/home_state.dart';
 import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
@@ -16,10 +18,16 @@ class SongPlaylistSelectorSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = themeCubit.isDarkMode;
+    final isDark = ThemeCubit.get(context).isDarkMode;
     return BlocBuilder<HomeCubit, HomeStates>(
+      buildWhen: (_, state) =>
+          state is HomePlaylistsLoadedState ||
+          state is HomePlaylistCreatedState ||
+          state is HomePlaylistDeletedState ||
+          state is HomeOperationErrorState,
       builder: (context, state) {
-        final playlists = homeCubit.playlists;
+        final home = HomeCubit.get(context);
+        final playlists = home.playlists;
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 24),
           child: Column(
@@ -29,13 +37,13 @@ class SongPlaylistSelectorSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: (isDark ? Colors.white24 : Colors.black12),
+                  color: isDark ? ColorsManager.white24 : ColorsManager.black12,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               verticalSpace24,
               Text(
-                'Select Playlist',
+                appTranslation().get('playlists'),
                 style: TextStylesManager.bold20.copyWith(
                   color: isDark ? ColorsManager.white : ColorsManager.black,
                 ),
@@ -45,7 +53,7 @@ class SongPlaylistSelectorSheet extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 40),
                   child: Text(
-                    'No playlists created yet',
+                    appTranslation().get('no_playlists_yet'),
                     style: TextStylesManager.regular14.copyWith(
                       color: isDark
                           ? ColorsManager.darkTextSecondary
@@ -64,14 +72,19 @@ class SongPlaylistSelectorSheet extends StatelessWidget {
                         icon: Icons.playlist_play_rounded,
                         label: playlist['name'],
                         onTap: () {
-                          homeCubit.addSongToPlaylist(
+                          home.addSongToPlaylist(
                             playlistId: playlist['id'],
                             song: song,
                           );
-                          Navigator.pop(context);
+                          context.pop;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Added to ${playlist['name']}'),
+                              content: Text(
+                                appTranslation().get(
+                                  'added_to_playlist',
+                                  params: {'playlist': playlist['name']},
+                                ),
+                              ),
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/theme/text_styles.dart';
+import 'package:pulse/core/utils/constants/spacing.dart';
 
 class SongDetailItem extends StatelessWidget {
   final String label;
@@ -31,7 +32,7 @@ class SongDetailItem extends StatelessWidget {
                   : ColorsManager.lightTextSecondary,
             ),
           ),
-          const SizedBox(height: 4),
+          verticalSpace4,
           Text(
             value,
             maxLines: isPath ? 2 : 1,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pulse/core/theme/colors.dart';
+import 'package:pulse/core/theme/text_styles.dart';
 
 class AppTheme {
   // -------- LIGHT -------- //
@@ -20,23 +21,23 @@ class AppTheme {
       primaryColor: ColorsManager.primary,
 
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
+        backgroundColor: ColorsManager.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
         systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
+          statusBarColor: ColorsManager.transparent,
           statusBarIconBrightness: Brightness.dark,
           statusBarBrightness: Brightness.light,
         ),
       ),
 
-      textTheme: const TextTheme(
-        titleMedium: TextStyle(
+      textTheme: TextTheme(
+        titleMedium: TextStylesManager.medium18.copyWith(
           color: ColorsManager.lightTextPrimary,
           fontWeight: FontWeight.w600,
         ),
-        bodyMedium: TextStyle(
+        bodyMedium: TextStylesManager.regular14.copyWith(
           color: ColorsManager.lightTextSecondary,
         ),
       ),
@@ -70,23 +71,23 @@ class AppTheme {
       primaryColor: ColorsManager.primary,
 
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
+        backgroundColor: ColorsManager.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
         systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
+          statusBarColor: ColorsManager.transparent,
           statusBarIconBrightness: Brightness.light,
           statusBarBrightness: Brightness.dark,
         ),
       ),
 
-      textTheme: const TextTheme(
-        titleMedium: TextStyle(
+      textTheme: TextTheme(
+        titleMedium: TextStylesManager.medium18.copyWith(
           color: ColorsManager.darkTextPrimary,
           fontWeight: FontWeight.w600,
         ),
-        bodyMedium: TextStyle(
+        bodyMedium: TextStylesManager.regular14.copyWith(
           color: ColorsManager.darkTextSecondary,
         ),
       ),

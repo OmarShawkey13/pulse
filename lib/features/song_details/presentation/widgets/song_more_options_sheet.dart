@@ -3,6 +3,7 @@ import 'package:pulse/core/models/music_model.dart';
 import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/theme/text_styles.dart';
 import 'package:pulse/core/utils/constants/spacing.dart';
+import 'package:pulse/core/utils/constants/constants.dart';
 import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
 import 'package:pulse/features/song_details/presentation/widgets/song_option_tile.dart';
 
@@ -22,7 +23,7 @@ class SongMoreOptionsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = themeCubit.isDarkMode;
+    final isDark = ThemeCubit.get(context).isDarkMode;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
@@ -33,7 +34,7 @@ class SongMoreOptionsSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: (isDark ? Colors.white24 : Colors.black12),
+              color: isDark ? ColorsManager.white24 : ColorsManager.black12,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -93,17 +94,17 @@ class SongMoreOptionsSheet extends StatelessWidget {
           // --- Options List ---
           SongOptionTile(
             icon: Icons.playlist_add_rounded,
-            label: 'Add to Playlist',
+            label: appTranslation().get('add_to_playlist'),
             onTap: onAddToPlaylist,
           ),
           SongOptionTile(
             icon: Icons.info_outline_rounded,
-            label: 'Track Details',
+            label: appTranslation().get('track_details'),
             onTap: onShowDetails,
           ),
           SongOptionTile(
             icon: Icons.share_rounded,
-            label: 'Share Song',
+            label: appTranslation().get('share_song'),
             onTap: onShare,
           ),
           verticalSpace16,

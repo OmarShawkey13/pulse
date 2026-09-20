@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:pulse/core/models/music_model.dart';
 import 'package:pulse/features/home/presentation/widgets/mini_player/mini_player_content.dart';
 import 'package:pulse/features/song_details/presentation/screen/song_details_screen.dart';
 
 class PlayerStack extends StatelessWidget {
   final double value;
   final double minHeight;
-  final dynamic song;
+  final MusicModel song;
   final VoidCallback onClose;
 
   const PlayerStack({
@@ -25,8 +26,8 @@ class PlayerStack extends StatelessWidget {
             opacity: (1 - value * 5).clamp(0.0, 1.0),
             child: IgnorePointer(
               ignoring: value > 0.1,
-              child: SizedBox(
-                height: minHeight,
+              child: ConstrainedBox(
+                constraints: BoxConstraints.tightFor(height: minHeight),
                 child: MiniPlayerContent(song: song),
               ),
             ),

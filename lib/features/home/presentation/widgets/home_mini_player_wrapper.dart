@@ -15,7 +15,7 @@ class HomeMiniPlayerWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocSelector<HomeCubit, HomeStates, bool>(
-      selector: (state) => homeCubit.currentSongPath != null,
+      selector: (state) => HomeCubit.get(context).currentSongPath != null,
       builder: (context, hasSong) {
         if (!hasSong) return const SizedBox.shrink();
 

@@ -38,6 +38,12 @@ class HomeLoadSongsErrorState extends HomeStates {
   HomeLoadSongsErrorState(this.error);
 }
 
+class HomeOperationErrorState extends HomeStates {
+  final String error;
+
+  HomeOperationErrorState(this.error);
+}
+
 //palette
 class HomeWaveColorUpdated extends HomeStates {}
 

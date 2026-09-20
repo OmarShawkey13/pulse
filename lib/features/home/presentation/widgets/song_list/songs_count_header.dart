@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/theme/text_styles.dart';
+import 'package:pulse/core/utils/constants/constants.dart';
 import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
 
 class SongsCountHeader extends StatelessWidget {
@@ -10,11 +11,11 @@ class SongsCountHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = themeCubit.isDarkMode;
+    final isDark = ThemeCubit.get(context).isDarkMode;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Text(
-        '$count Songs',
+        appTranslation().get('song_count_title', params: {'count': count}),
         style: TextStylesManager.bold16.copyWith(
           color:
               (isDark

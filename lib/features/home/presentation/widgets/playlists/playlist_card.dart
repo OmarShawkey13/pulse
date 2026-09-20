@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:on_audio_query_pluse/on_audio_query.dart';
+import 'package:pulse/core/errors/either.dart';
+import 'package:pulse/core/errors/failures.dart';
 import 'package:pulse/core/models/music_model.dart';
 import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/theme/text_styles.dart';
 import 'package:pulse/core/utils/constants/spacing.dart';
 import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
-import 'package:pulse/features/home/presentation/widgets/playlists/playlist_songs_screen.dart';
+import 'package:pulse/core/utils/constants/constants.dart';
+import 'package:pulse/core/utils/constants/routes.dart';
+import 'package:pulse/core/utils/extensions/context_extension.dart';
+import 'package:pulse/features/home/presentation/widgets/playlists/playlist_card_placeholder.dart';
 
 class PlaylistCard extends StatelessWidget {
   final Map<String, dynamic> playlist;
@@ -17,13 +22,11 @@ class PlaylistCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute<Object>(
-            builder: (context) => PlaylistSongsScreen(
-              playlistId: playlist['id'],
-              playlistName: playlist['name'],
-            ),
+        context.push(
+          Routes.playlistSongs,
+          arguments: PlaylistSongsRouteArgs(
+            playlistId: playlist['id'] as int,
+            playlistName: playlist['name'] as String,
           ),
         );
       },
@@ -34,19 +37,25 @@ class PlaylistCard extends StatelessWidget {
               .withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: (isDark ? Colors.white : Colors.black).withValues(
-              alpha: 0.05,
-            ),
+            color: (isDark ? ColorsManager.white : ColorsManager.black)
+                .withValues(
+                  alpha: 0.05,
+                ),
           ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: FutureBuilder<List<MusicModel>>(
-                future: homeCubit.getPlaylistSongs(playlist['id']),
+              child: FutureBuilder<Either<Failure, List<MusicModel>>>(
+                future: HomeCubit.get(context).getPlaylistSongs(playlist['id']),
                 builder: (context, snapshot) {
-                  final songs = snapshot.data ?? [];
+                  final songs =
+                      snapshot.data?.fold(
+                        (_) => const <MusicModel>[],
+                        (value) => value,
+                      ) ??
+                      const <MusicModel>[];
                   final hasSongs = songs.isNotEmpty;
                   final lastSongId = hasSongs ? songs.last.id : null;
 
@@ -68,7 +77,9 @@ class PlaylistCard extends StatelessWidget {
                       boxShadow: [
                         BoxShadow(
                           color:
-                              (hasSongs ? Colors.black : ColorsManager.primary)
+                              (hasSongs
+                                      ? ColorsManager.black
+                                      : ColorsManager.primary)
                                   .withValues(alpha: 0.2),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
@@ -86,9 +97,10 @@ class PlaylistCard extends StatelessWidget {
                               quality: 100,
                               size: 1000,
                               format: ArtworkFormat.PNG,
-                              nullArtworkWidget: _buildDefaultIcon(),
+                              nullArtworkWidget:
+                                  const PlaylistCardPlaceholder(),
                             )
-                          : _buildDefaultIcon(),
+                          : const PlaylistCardPlaceholder(),
                     ),
                   );
                 },
@@ -113,12 +125,23 @@ class PlaylistCard extends StatelessWidget {
                           ),
                         ),
                         verticalSpace2,
-                        FutureBuilder<List<MusicModel>>(
-                          future: homeCubit.getPlaylistSongs(playlist['id']),
+                        FutureBuilder<Either<Failure, List<MusicModel>>>(
+                          future: HomeCubit.get(context).getPlaylistSongs(
+                            playlist['id'],
+                          ),
                           builder: (context, snapshot) {
-                            final count = snapshot.data?.length ?? 0;
+                            final songs =
+                                snapshot.data?.fold(
+                                  (_) => const <MusicModel>[],
+                                  (value) => value,
+                                ) ??
+                                const <MusicModel>[];
+                            final count = songs.length;
                             return Text(
-                              '$count songs',
+                              appTranslation().get(
+                                'song_count',
+                                params: {'count': count},
+                              ),
                               style: TextStylesManager.regular10.copyWith(
                                 color:
                                     (isDark
@@ -133,7 +156,7 @@ class PlaylistCard extends StatelessWidget {
                     ),
                   ),
                   Material(
-                    color: Colors.transparent,
+                    color: ColorsManager.transparent,
                     child: InkWell(
                       onTap: () => _showDeleteConfirm(context),
                       borderRadius: BorderRadius.circular(20),
@@ -158,16 +181,6 @@ class PlaylistCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDefaultIcon() {
-    return const Center(
-      child: Icon(
-        Icons.music_note_rounded,
-        size: 45,
-        color: Colors.white,
-      ),
-    );
-  }
-
   void _showDeleteConfirm(BuildContext context) {
     showModalBottomSheet<Object>(
       context: context,
@@ -185,9 +198,10 @@ class PlaylistCard extends StatelessWidget {
             height: 4,
             width: 40,
             decoration: BoxDecoration(
-              color: (isDark ? Colors.white : Colors.black).withValues(
-                alpha: 0.1,
-              ),
+              color: (isDark ? ColorsManager.white : ColorsManager.black)
+                  .withValues(
+                    alpha: 0.1,
+                  ),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -196,13 +210,15 @@ class PlaylistCard extends StatelessWidget {
               Icons.delete_outline_rounded,
               color: ColorsManager.error,
             ),
-            title: const Text(
-              'Delete Playlist',
-              style: TextStyle(color: ColorsManager.error),
+            title: Text(
+              appTranslation().get('delete_playlist'),
+              style: TextStylesManager.medium16.copyWith(
+                color: ColorsManager.error,
+              ),
             ),
             onTap: () {
-              homeCubit.deletePlaylist(playlist['id']);
-              Navigator.pop(context);
+              HomeCubit.get(context).deletePlaylist(playlist['id']);
+              context.pop;
             },
           ),
           verticalSpace20,

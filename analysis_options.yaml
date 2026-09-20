@@ -15,6 +15,9 @@ analyzer:
     unnecessary_const: warning
     prefer_const_constructors: warning
     prefer_const_literals_to_create_immutables: warning
+  exclude:
+    - build/**
+    - android/**
   language:
     strict-inference: true
 

@@ -21,7 +21,7 @@ class HomePagesView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: BlocSelector<HomeCubit, HomeStates, bool>(
-        selector: (state) => homeCubit.currentSongPath != null,
+        selector: (state) => HomeCubit.get(context).currentSongPath != null,
         builder: (context, hasSong) {
           return AnimatedPadding(
             duration: const Duration(milliseconds: 500),

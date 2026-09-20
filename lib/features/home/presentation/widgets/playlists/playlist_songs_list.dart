@@ -17,7 +17,7 @@ class PlaylistSongsList extends StatelessWidget {
           (context, index) {
             final song = songs[index];
             return StreamBuilder(
-              stream: homeCubit.audioHandler.mediaItem,
+              stream: HomeCubit.get(context).audioHandler.mediaItem,
               builder: (context, snapshot) {
                 final isPlaying = snapshot.data?.id == song.path;
                 return SongItem(

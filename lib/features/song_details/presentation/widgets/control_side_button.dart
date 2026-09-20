@@ -18,13 +18,13 @@ class ControlSideButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = themeCubit.isDarkMode;
+    final isDark = ThemeCubit.get(context).isDarkMode;
     return IconButton(
       onPressed: onTap,
       style: IconButton.styleFrom(
         backgroundColor: isActive
             ? activeColor.withValues(alpha: 0.12)
-            : Colors.transparent,
+            : ColorsManager.transparent,
         foregroundColor: isActive
             ? activeColor
             : (isDark

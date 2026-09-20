@@ -1,9 +1,11 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:pulse/core/models/music_model.dart';
 import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/utils/constants/spacing.dart';
 import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
+import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
 import 'package:pulse/features/song_details/presentation/widgets/song_controls.dart';
 import 'package:pulse/features/song_details/presentation/widgets/song_favorite_button.dart';
 import 'package:pulse/features/song_details/presentation/widgets/song_seek_bar.dart';
@@ -19,7 +21,8 @@ class SongDetailsGlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = ThemeCubit.get(context).isDarkMode;
+    final home = HomeCubit.get(context);
 
     return RepaintBoundary(
       child: ClipRRect(
@@ -37,7 +40,9 @@ class SongDetailsGlassCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(40),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                  color: ColorsManager.black.withValues(
+                    alpha: isDark ? 0.2 : 0.05,
+                  ),
                   blurRadius: 40,
                   offset: const Offset(0, 10),
                 ),
@@ -57,9 +62,9 @@ class SongDetailsGlassCard extends StatelessWidget {
                     Expanded(child: SongTitleSection(song: song)),
                     horizontalSpace12,
                     SongFavoriteButton(
-                      isFav: homeCubit.isSongFavorite(song.id),
+                      isFav: home.isSongFavorite(song.id),
                       isDark: isDark,
-                      onPressed: () => homeCubit.toggleFavorite(song),
+                      onPressed: () => home.toggleFavorite(song),
                     ),
                   ],
                 ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/theme/text_styles.dart';
+import 'package:pulse/core/utils/constants/constants.dart';
 import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
 import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
 import 'package:pulse/core/utils/extensions/context_extension.dart';
@@ -15,13 +16,13 @@ class SongDetailsAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = themeCubit.isDarkMode;
+    final isDark = ThemeCubit.get(context).isDarkMode;
     return AppBar(
-      backgroundColor: Colors.transparent,
+      backgroundColor: ColorsManager.transparent,
       elevation: 0,
       centerTitle: true,
       title: Text(
-        'NOW PLAYING',
+        appTranslation().get('now_playing'),
         style: TextStylesManager.bold14.copyWith(
           letterSpacing: 2,
           color: isDark
@@ -49,10 +50,11 @@ class SongDetailsAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   void _showMoreOptions(BuildContext context) {
-    final isDark = themeCubit.isDarkMode;
-    final currentSong = homeCubit.songs.firstWhere(
-      (s) => s.path == homeCubit.currentSongPath,
-      orElse: () => homeCubit.songs.first,
+    final home = HomeCubit.get(context);
+    final isDark = ThemeCubit.get(context).isDarkMode;
+    final currentSong = home.songs.firstWhere(
+      (s) => s.path == home.currentSongPath,
+      orElse: () => home.songs.first,
     );
 
     showModalBottomSheet<void>(
@@ -67,16 +69,15 @@ class SongDetailsAppBar extends StatelessWidget implements PreferredSizeWidget {
         return SongMoreOptionsSheet(
           song: currentSong,
           onAddToPlaylist: () {
-            Navigator.pop(context);
+            context.pop;
             _showPlaylistSelector(context);
           },
           onShowDetails: () {
-            Navigator.pop(context);
+            context.pop;
             _showTrackDetails(context);
           },
           onShare: () {
-            // Implement share logic if needed
-            Navigator.pop(context);
+            context.pop;
           },
         );
       },
@@ -84,10 +85,11 @@ class SongDetailsAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   void _showTrackDetails(BuildContext context) {
-    final isDark = themeCubit.isDarkMode;
-    final currentSong = homeCubit.songs.firstWhere(
-      (s) => s.path == homeCubit.currentSongPath,
-      orElse: () => homeCubit.songs.first,
+    final home = HomeCubit.get(context);
+    final isDark = ThemeCubit.get(context).isDarkMode;
+    final currentSong = home.songs.firstWhere(
+      (s) => s.path == home.currentSongPath,
+      orElse: () => home.songs.first,
     );
 
     showModalBottomSheet<void>(
@@ -103,10 +105,11 @@ class SongDetailsAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   void _showPlaylistSelector(BuildContext context) {
-    final isDark = themeCubit.isDarkMode;
-    final currentSong = homeCubit.songs.firstWhere(
-      (s) => s.path == homeCubit.currentSongPath,
-      orElse: () => homeCubit.songs.first,
+    final home = HomeCubit.get(context);
+    final isDark = ThemeCubit.get(context).isDarkMode;
+    final currentSong = home.songs.firstWhere(
+      (s) => s.path == home.currentSongPath,
+      orElse: () => home.songs.first,
     );
 
     showModalBottomSheet<void>(

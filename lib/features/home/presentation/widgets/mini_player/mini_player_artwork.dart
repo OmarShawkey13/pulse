@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:on_audio_query_pluse/on_audio_query.dart' hide SongModel;
 import 'package:pulse/core/models/music_model.dart';
-import 'package:pulse/core/theme/colors.dart';
+import 'package:pulse/features/home/presentation/widgets/mini_player/mini_player_artwork_placeholder.dart';
 
 class MiniPlayerArtwork extends StatelessWidget {
   final MusicModel song;
@@ -24,24 +24,9 @@ class MiniPlayerArtwork extends StatelessWidget {
         artworkWidth: size,
         artworkFit: BoxFit.cover,
         artworkBorder: BorderRadius.circular(8),
-        nullArtworkWidget: _buildPlaceholder(),
-        errorBuilder: (context, exception, _) => _buildPlaceholder(),
-      ),
-    );
-  }
-
-  Widget _buildPlaceholder() {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: ColorsManager.darkTextSecondary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Icon(
-        Icons.music_note_rounded,
-        color: ColorsManager.lightSurface.withValues(alpha: 0.7),
-        size: size * 0.5,
+        nullArtworkWidget: MiniPlayerArtworkPlaceholder(size: size),
+        errorBuilder: (context, exception, _) =>
+            MiniPlayerArtworkPlaceholder(size: size),
       ),
     );
   }

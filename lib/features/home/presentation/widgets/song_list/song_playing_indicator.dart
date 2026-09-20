@@ -22,7 +22,7 @@ class SongPlayingIndicator extends StatelessWidget {
       ),
       child: const Icon(
         Icons.pause_rounded,
-        color: Colors.white,
+        color: ColorsManager.white,
         size: 20,
       ),
     );

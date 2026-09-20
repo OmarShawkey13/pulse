@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
 
 class PlayPauseButton extends StatelessWidget {
@@ -35,7 +36,7 @@ class PlayPauseButton extends StatelessWidget {
               offset: const Offset(0, 8),
             ),
             BoxShadow(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: ColorsManager.white.withValues(alpha: 0.2),
               blurRadius: 8,
               spreadRadius: -2,
               offset: const Offset(0, -4),
@@ -51,7 +52,7 @@ class PlayPauseButton extends StatelessWidget {
               playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
               key: ValueKey(playing),
               size: 42,
-              color: Colors.white,
+              color: ColorsManager.white,
             ),
           ),
         ),

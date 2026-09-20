@@ -3,6 +3,7 @@ import 'package:pulse/core/models/music_model.dart';
 import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/theme/text_styles.dart';
 import 'package:pulse/core/utils/constants/spacing.dart';
+import 'package:pulse/core/utils/constants/constants.dart';
 import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
 import 'package:pulse/features/song_details/presentation/widgets/song_detail_item.dart';
 
@@ -13,10 +14,10 @@ class SongTrackDetailsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = themeCubit.isDarkMode;
+    final isDark = ThemeCubit.get(context).isDarkMode;
 
     // Format duration: handle null/zero
-    String durationText = 'Unknown';
+    String durationText = appTranslation().get('unknown');
     if (song.duration != null && song.duration! > 0) {
       final duration = Duration(milliseconds: song.duration!);
       final minutes = duration.inMinutes;
@@ -26,7 +27,7 @@ class SongTrackDetailsSheet extends StatelessWidget {
     }
 
     // Format size: handle null/zero
-    String sizeText = 'Unknown';
+    String sizeText = appTranslation().get('unknown');
     if (song.size != null && song.size! > 0) {
       final sizeInMb = song.size! / (1024 * 1024);
       sizeText = '${sizeInMb.toStringAsFixed(2)} MB';
@@ -44,40 +45,48 @@ class SongTrackDetailsSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: (isDark ? Colors.white24 : Colors.black12),
+                  color: isDark ? ColorsManager.white24 : ColorsManager.black12,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             verticalSpace24,
             Text(
-              'Track Details',
+              appTranslation().get('track_details'),
               style: TextStylesManager.bold20.copyWith(
                 color: isDark ? ColorsManager.white : ColorsManager.black,
               ),
             ),
             verticalSpace24,
-            SongDetailItem(label: 'Title', value: song.title, isDark: isDark),
-            SongDetailItem(label: 'Artist', value: song.artist, isDark: isDark),
             SongDetailItem(
-              label: 'Album',
+              label: appTranslation().get('title'),
+              value: song.title,
+              isDark: isDark,
+            ),
+            SongDetailItem(
+              label: appTranslation().get('artist'),
+              value: song.artist,
+              isDark: isDark,
+            ),
+            SongDetailItem(
+              label: appTranslation().get('album'),
               value: (song.album == null || song.album == '<unknown>')
-                  ? 'Unknown'
+                  ? appTranslation().get('unknown')
                   : song.album!,
               isDark: isDark,
             ),
             SongDetailItem(
-              label: 'Duration',
+              label: appTranslation().get('duration'),
               value: durationText,
               isDark: isDark,
             ),
             SongDetailItem(
-              label: 'Size',
+              label: appTranslation().get('size'),
               value: sizeText,
               isDark: isDark,
             ),
             SongDetailItem(
-              label: 'Path',
+              label: appTranslation().get('path'),
               value: song.path,
               isDark: isDark,
               isPath: true,
