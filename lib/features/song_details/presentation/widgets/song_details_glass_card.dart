@@ -1,11 +1,13 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pulse/core/models/music_model.dart';
 import 'package:pulse/core/theme/colors.dart';
-import 'package:pulse/core/utils/constants/spacing.dart';
 import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
+import 'package:pulse/core/utils/cubit/home/home_state.dart';
 import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
+import 'package:pulse/core/utils/cubit/theme/theme_state.dart';
 import 'package:pulse/features/song_details/presentation/widgets/song_controls.dart';
 import 'package:pulse/features/song_details/presentation/widgets/song_favorite_button.dart';
 import 'package:pulse/features/song_details/presentation/widgets/song_seek_bar.dart';
@@ -21,62 +23,85 @@ class SongDetailsGlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = ThemeCubit.get(context).isDarkMode;
-    final home = HomeCubit.get(context);
+    return BlocBuilder<ThemeCubit, ThemeState>(
+      buildWhen: (_, state) =>
+          state is ThemeChangeThemeState || state is ThemeLanguageUpdatedState,
+      builder: (context, _) {
+        final isDark = ThemeCubit.get(context).isDarkMode;
 
-    return RepaintBoundary(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(32),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-            decoration: BoxDecoration(
-              color:
-                  (isDark
-                          ? ColorsManager.darkSurface
-                          : ColorsManager.lightSurface)
-                      .withValues(alpha: isDark ? 0.05 : 0.3),
-              borderRadius: BorderRadius.circular(40),
-              boxShadow: [
-                BoxShadow(
-                  color: ColorsManager.black.withValues(
-                    alpha: isDark ? 0.2 : 0.05,
-                  ),
-                  blurRadius: 40,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-              border: Border.all(
-                color: ColorsManager.lightSurface.withValues(
-                  alpha: isDark ? 0.03 : 0.15,
-                ),
-                width: 0.5,
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Expanded(child: SongTitleSection(song: song)),
-                    horizontalSpace12,
-                    SongFavoriteButton(
-                      isFav: home.isSongFavorite(song.id),
-                      isDark: isDark,
-                      onPressed: () => home.toggleFavorite(song),
+        return BlocBuilder<HomeCubit, HomeStates>(
+          buildWhen: (_, state) =>
+              state is HomeFavoriteToggledState ||
+              state is HomePlayerPlayState ||
+              state is HomePlayerNextState ||
+              state is HomePlayerPreviousState ||
+              state is HomePlayerStopState,
+          builder: (context, _) {
+            final home = HomeCubit.get(context);
+            final isCompact = MediaQuery.sizeOf(context).width < 360;
+
+            return RepaintBoundary(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(isCompact ? 24 : 32),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isCompact ? 16 : 24,
+                      vertical: isCompact ? 20 : 28,
                     ),
-                  ],
+                    decoration: BoxDecoration(
+                      color:
+                          (isDark
+                                  ? ColorsManager.darkSurface
+                                  : ColorsManager.lightSurface)
+                              .withValues(alpha: isDark ? 0.05 : 0.3),
+                      borderRadius: BorderRadius.circular(isCompact ? 28 : 40),
+                      boxShadow: [
+                        BoxShadow(
+                          color: ColorsManager.black.withValues(
+                            alpha: isDark ? 0.18 : 0.04,
+                          ),
+                          blurRadius: isCompact ? 24 : 32,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: ColorsManager.lightSurface.withValues(
+                          alpha: isDark ? 0.03 : 0.15,
+                        ),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(child: SongTitleSection(song: song)),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: SongFavoriteButton(
+                                isFav: home.isSongFavorite(song.id),
+                                isDark: isDark,
+                                onPressed: () => home.toggleFavorite(song),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(height: isCompact ? 18 : 24),
+                        const SongSeekBar(),
+                        Container(height: isCompact ? 12 : 16),
+                        SongControls(songPath: song.path),
+                      ],
+                    ),
+                  ),
                 ),
-                verticalSpace24,
-                const SongSeekBar(),
-                verticalSpace16,
-                SongControls(songPath: song.path),
-              ],
-            ),
-          ),
-        ),
-      ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -31,8 +31,10 @@ class PlaylistSongsScreen extends StatelessWidget {
       extendBodyBehindAppBar: true,
       body: HomeBackground(
         child: BlocBuilder<PlaylistSongsCubit, PlaylistSongsState>(
-          buildWhen: (previous, current) =>
-              previous.runtimeType != current.runtimeType,
+          buildWhen: (_, current) =>
+              current is PlaylistSongsLoading ||
+              current is PlaylistSongsLoaded ||
+              current is PlaylistSongsError,
           builder: (context, state) {
             final songs = state is PlaylistSongsLoaded
                 ? state.songs

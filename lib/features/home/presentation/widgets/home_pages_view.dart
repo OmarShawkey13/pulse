@@ -20,29 +20,31 @@ class HomePagesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: BlocSelector<HomeCubit, HomeStates, bool>(
-        selector: (state) => HomeCubit.get(context).currentSongPath != null,
-        builder: (context, hasSong) {
-          return AnimatedPadding(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeOutCubic,
-            padding: EdgeInsets.only(
-              bottom: hasSong
-                  ? 85
-                  : 0, // Slightly more padding for better spacing
-            ),
-            child: PageView(
-              controller: controller,
-              onPageChanged: onPageChanged,
-              children: const [
-                HomeContent(),
-                RecentSongsList(),
-                FavoriteSongsList(),
-                PlaylistsPage(),
-              ],
-            ),
-          );
-        },
+      child: RepaintBoundary(
+        child: BlocSelector<HomeCubit, HomeStates, bool>(
+          selector: (state) => HomeCubit.get(context).currentSongPath != null,
+          builder: (context, hasSong) {
+            return AnimatedPadding(
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeOutCubic,
+              padding: EdgeInsets.only(
+                bottom: hasSong
+                    ? 85
+                    : 0, // Slightly more padding for better spacing
+              ),
+              child: PageView(
+                controller: controller,
+                onPageChanged: onPageChanged,
+                children: const [
+                  HomeContent(),
+                  RecentSongsList(),
+                  FavoriteSongsList(),
+                  PlaylistsPage(),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

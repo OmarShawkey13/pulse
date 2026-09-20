@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:pulse/core/theme/colors.dart';
+import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
 
 class MiniPlayerContainer extends StatelessWidget {
   final double value;
@@ -20,19 +21,22 @@ class MiniPlayerContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final borderRadius = lerpDouble(20.0, 0.0, value) ?? 0.0;
+    final isDark = ThemeCubit.get(context).isDarkMode;
     return Container(
       width: double.infinity,
       height: maxHeight,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: ColorsManager.darkCard,
+        color: isDark ? ColorsManager.darkCard : ColorsManager.lightSurface,
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(borderRadius),
         ),
         boxShadow: value < 0.1
             ? [
                 BoxShadow(
-                  color: ColorsManager.black.withValues(alpha: 0.15),
+                  color: ColorsManager.black.withValues(
+                    alpha: isDark ? 0.2 : 0.1,
+                  ),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),

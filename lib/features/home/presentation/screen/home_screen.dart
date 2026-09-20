@@ -53,10 +53,8 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             SafeArea(
               child: BlocConsumer<HomeCubit, HomeStates>(
-                buildWhen: (previous, current) =>
+                buildWhen: (_, current) =>
                     current is HomeTabChangedState ||
-                    current is HomePlayerPlayState ||
-                    current is HomePlayerStopState ||
                     current is HomeLoadSongsSuccessState,
                 listener: (context, state) {
                   if (state is HomeTabChangedState) {

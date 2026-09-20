@@ -32,8 +32,8 @@ class MiniPlayerGestureWrapper extends StatelessWidget {
             }
           },
           onVerticalDragUpdate: (details) {
-            final double delta =
-                details.primaryDelta! / (maxHeight - minHeight);
+            final range = (maxHeight - minHeight).clamp(1.0, double.infinity);
+            final double delta = details.primaryDelta! / range;
             controller.value -= delta;
           },
           onVerticalDragEnd: (details) {

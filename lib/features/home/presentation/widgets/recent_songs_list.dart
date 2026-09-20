@@ -10,12 +10,7 @@ class RecentSongsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeStates>(
-      buildWhen: (_, state) =>
-          state is HomePlayerPlayState ||
-          state is HomePlayerPauseState ||
-          state is HomePlayerStopState ||
-          state is HomePlayerNextState ||
-          state is HomePlayerPreviousState,
+      buildWhen: (_, state) => state is HomeLoadSongsSuccessState,
       builder: (context, state) {
         final home = HomeCubit.get(context);
         return ListView.builder(

@@ -5,6 +5,7 @@ import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
 class ControlSideButton extends StatelessWidget {
   final IconData icon;
   final bool isActive;
+  final bool isCompact;
   final VoidCallback onTap;
   final Color activeColor;
 
@@ -12,6 +13,7 @@ class ControlSideButton extends StatelessWidget {
     super.key,
     required this.icon,
     required this.isActive,
+    this.isCompact = false,
     required this.onTap,
     required this.activeColor,
   });
@@ -22,6 +24,8 @@ class ControlSideButton extends StatelessWidget {
     return IconButton(
       onPressed: onTap,
       style: IconButton.styleFrom(
+        minimumSize: Size.square(isCompact ? 40 : 52),
+        maximumSize: Size.square(isCompact ? 40 : 52),
         backgroundColor: isActive
             ? activeColor.withValues(alpha: 0.12)
             : ColorsManager.transparent,
@@ -30,7 +34,7 @@ class ControlSideButton extends StatelessWidget {
             : (isDark
                   ? ColorsManager.darkTextSecondary.withValues(alpha: 0.6)
                   : ColorsManager.lightTextSecondary.withValues(alpha: 0.6)),
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(isCompact ? 8 : 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
       icon: Icon(icon, size: 26),

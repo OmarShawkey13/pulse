@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
 import 'package:pulse/core/utils/cubit/home/home_state.dart';
+import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
+import 'package:pulse/core/utils/cubit/theme/theme_state.dart';
 import 'package:pulse/features/home/presentation/widgets/mini_player/mini_player_container.dart';
 import 'package:pulse/features/home/presentation/widgets/mini_player/mini_player_gesture_wrapper.dart';
 import 'package:pulse/features/home/presentation/widgets/mini_player/player_stack.dart';
@@ -42,8 +44,10 @@ class _MiniPlayerState extends State<MiniPlayer>
   void didChangeDependencies() {
     super.didChangeDependencies();
     final mediaQuery = MediaQuery.of(context);
-    _maxHeight = mediaQuery.size.height;
     _minHeight = 72 + mediaQuery.padding.bottom;
+    _maxHeight = mediaQuery.size.height
+        .clamp(_minHeight + 1, double.infinity)
+        .toDouble();
   }
 
   @override
@@ -70,51 +74,56 @@ class _MiniPlayerState extends State<MiniPlayer>
           SystemNavigator.pop();
         }
       },
-      child: BlocBuilder<HomeCubit, HomeStates>(
-        buildWhen: (prev, curr) => _shouldRebuild(curr),
-        builder: (context, state) {
-          final cubit = HomeCubit.get(context);
-          final songPath = cubit.currentSongPath;
+      child: BlocBuilder<ThemeCubit, ThemeState>(
+        buildWhen: (_, state) =>
+            state is ThemeChangeThemeState ||
+            state is ThemeLanguageUpdatedState,
+        builder: (context, _) => BlocBuilder<HomeCubit, HomeStates>(
+          buildWhen: (_, curr) => _shouldRebuild(curr),
+          builder: (context, state) {
+            final cubit = HomeCubit.get(context);
+            final songPath = cubit.currentSongPath;
 
-          if (songPath == null || cubit.songs.isEmpty) {
-            _resetAnimation();
-            return const SizedBox.shrink();
-          }
+            if (songPath == null || cubit.songs.isEmpty) {
+              _resetAnimation();
+              return const SizedBox.shrink();
+            }
 
-          final song = cubit.songs.firstWhere(
-            (e) => e.path == songPath,
-            orElse: () => cubit.songs.first,
-          );
+            final song = cubit.songs.firstWhere(
+              (e) => e.path == songPath,
+              orElse: () => cubit.songs.first,
+            );
 
-          return AnimatedBuilder(
-            animation: _controller,
-            builder: (context, _) {
-              final value = _controller.value;
-              final currentHeight =
-                  lerpDouble(_minHeight, _maxHeight, value) ?? _minHeight;
+            return AnimatedBuilder(
+              animation: _controller,
+              builder: (context, _) {
+                final value = _controller.value;
+                final currentHeight =
+                    lerpDouble(_minHeight, _maxHeight, value) ?? _minHeight;
 
-              return ConstrainedBox(
-                constraints: BoxConstraints.tightFor(height: currentHeight),
-                child: MiniPlayerGestureWrapper(
-                  controller: _controller,
-                  minHeight: _minHeight,
-                  maxHeight: _maxHeight,
-                  child: MiniPlayerContainer(
-                    value: value,
+                return ConstrainedBox(
+                  constraints: BoxConstraints.tightFor(height: currentHeight),
+                  child: MiniPlayerGestureWrapper(
+                    controller: _controller,
                     minHeight: _minHeight,
                     maxHeight: _maxHeight,
-                    child: PlayerStack(
+                    child: MiniPlayerContainer(
                       value: value,
                       minHeight: _minHeight,
-                      song: song,
-                      onClose: _collapse,
+                      maxHeight: _maxHeight,
+                      child: PlayerStack(
+                        value: value,
+                        minHeight: _minHeight,
+                        song: song,
+                        onClose: _collapse,
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
-          );
-        },
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

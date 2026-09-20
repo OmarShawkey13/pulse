@@ -22,22 +22,27 @@ class PlayerStack extends StatelessWidget {
     return Stack(
       children: [
         if (value < 0.95)
-          Opacity(
-            opacity: (1 - value * 5).clamp(0.0, 1.0),
-            child: IgnorePointer(
-              ignoring: value > 0.1,
-              child: ConstrainedBox(
-                constraints: BoxConstraints.tightFor(height: minHeight),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: minHeight,
+            child: Opacity(
+              opacity: (1 - value * 5).clamp(0.0, 1.0),
+              child: IgnorePointer(
+                ignoring: value > 0.1,
                 child: MiniPlayerContent(song: song),
               ),
             ),
           ),
         if (value > 0.05)
-          Opacity(
-            opacity: ((value - 0.05) * 1.05).clamp(0.0, 1.0),
-            child: IgnorePointer(
-              ignoring: value < 0.8,
-              child: SongDetailsScreen(onClose: onClose),
+          Positioned.fill(
+            child: Opacity(
+              opacity: ((value - 0.05) * 1.05).clamp(0.0, 1.0),
+              child: IgnorePointer(
+                ignoring: value < 0.8,
+                child: SongDetailsScreen(onClose: onClose),
+              ),
             ),
           ),
       ],

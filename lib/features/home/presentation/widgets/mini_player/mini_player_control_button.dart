@@ -16,7 +16,11 @@ class MiniPlayerControlButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(),
+      constraints: BoxConstraints.tightFor(
+        width: size + 18,
+        height: size + 18,
+      ),
+      visualDensity: VisualDensity.compact,
       icon: Icon(icon, size: size),
       onPressed: onPressed,
     );

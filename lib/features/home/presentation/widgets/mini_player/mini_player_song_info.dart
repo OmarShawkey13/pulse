@@ -4,6 +4,7 @@ import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/theme/text_styles.dart';
 import 'package:pulse/core/utils/constants/primary/marquee_text.dart';
 import 'package:pulse/core/utils/constants/spacing.dart';
+import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
 
 class MiniPlayerSongInfo extends StatelessWidget {
   final MusicModel song;
@@ -12,6 +13,7 @@ class MiniPlayerSongInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = ThemeCubit.get(context).isDarkMode;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,7 +30,9 @@ class MiniPlayerSongInfo extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStylesManager.regular12.copyWith(
-            color: ColorsManager.darkTextSecondary,
+            color: isDark
+                ? ColorsManager.darkTextSecondary
+                : ColorsManager.lightTextSecondary,
           ),
         ),
       ],

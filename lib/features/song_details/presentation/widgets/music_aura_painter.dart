@@ -35,6 +35,6 @@ class MusicAuraPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant MusicAuraPainter oldDelegate) {
-    return false;
+    return oldDelegate.shader != shader || oldDelegate.color != color;
   }
 }

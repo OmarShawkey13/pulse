@@ -9,7 +9,10 @@ void main() {
     final cubit = ThemeCubit();
     final stateFuture = expectLater(
       cubit.stream,
-      emits(isA<ThemeLanguageUpdatedState>()),
+      emitsInOrder([
+        isA<ThemeLanguageLoadingState>(),
+        isA<ThemeLanguageUpdatedState>(),
+      ]),
     );
 
     cubit.changeLanguage(

@@ -6,6 +6,7 @@ import 'package:pulse/core/theme/colors.dart';
 import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
 import 'package:pulse/core/utils/cubit/home/home_state.dart';
 import 'package:pulse/core/utils/cubit/theme/theme_cubit.dart';
+import 'package:pulse/core/utils/cubit/theme/theme_state.dart';
 import 'package:pulse/features/song_details/presentation/widgets/music_aura_painter.dart';
 
 class MusicAura extends StatefulWidget {
@@ -33,73 +34,89 @@ class _MusicAuraState extends State<MusicAura>
   }
 
   Future<void> _loadShader() async {
-    final program = await ui.FragmentProgram.fromAsset(
-      'assets/shaders/aura.frag',
-    );
+    try {
+      final program = await ui.FragmentProgram.fromAsset(
+        'assets/shaders/aura.frag',
+      );
 
-    if (mounted) {
-      setState(() {
-        _shader = program.fragmentShader();
-      });
+      if (mounted) {
+        setState(() {
+          _shader = program.fragmentShader();
+        });
+      }
+    } catch (_) {
+      // Keep the gradient fallback below when a device cannot compile the
+      // runtime effect instead of leaving the player with a blank background.
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_shader == null) return const SizedBox.shrink();
-
-    return BlocBuilder<HomeCubit, HomeStates>(
-      buildWhen: (prev, curr) => curr is HomeWaveColorUpdated,
-      builder: (context, state) {
+    return BlocBuilder<ThemeCubit, ThemeState>(
+      buildWhen: (_, state) =>
+          state is ThemeChangeThemeState || state is ThemeLanguageUpdatedState,
+      builder: (context, _) {
         final isDark = ThemeCubit.get(context).isDarkMode;
-        final auraColor =
-            HomeCubit.get(context).waveColor ?? ColorsManager.primary;
-
         final surfaceColor = isDark
             ? ColorsManager.darkBackground
             : ColorsManager.lightBackground;
 
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            // الخلفية
-            ColoredBox(color: surfaceColor),
+        return BlocBuilder<HomeCubit, HomeStates>(
+          buildWhen: (_, state) => state is HomeWaveColorUpdated,
+          builder: (context, _) {
+            final auraColor =
+                HomeCubit.get(context).waveColor ?? ColorsManager.primary;
 
-            // 🔥 shader layer (خفيف جدًا)
-            RepaintBoundary(
-              child: CustomPaint(
-                painter: MusicAuraPainter(
-                  shader: _shader!,
-                  animation: _controller,
-                  color: auraColor,
-                ),
-              ),
-            ),
-
-            // 🔥 overlay خفيف بدل blur
-            IgnorePointer(
-              child: Container(
-                color: surfaceColor.withValues(alpha: 0.08),
-              ),
-            ),
-
-            // vignette أخف
-            IgnorePointer(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: const Alignment(0, -0.2),
-                    radius: 1.3,
-                    colors: [
-                      ColorsManager.transparent,
-                      surfaceColor.withValues(alpha: 0.4),
-                      surfaceColor,
-                    ],
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                ColoredBox(color: surfaceColor),
+                if (_shader != null)
+                  RepaintBoundary(
+                    child: CustomPaint(
+                      painter: MusicAuraPainter(
+                        shader: _shader!,
+                        animation: _controller,
+                        color: auraColor,
+                      ),
+                    ),
+                  )
+                else
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: const Alignment(0, -0.2),
+                        radius: 1.1,
+                        colors: [
+                          auraColor.withValues(alpha: 0.28),
+                          surfaceColor,
+                        ],
+                      ),
+                    ),
+                  ),
+                IgnorePointer(
+                  child: ColoredBox(
+                    color: surfaceColor.withValues(alpha: 0.08),
                   ),
                 ),
-              ),
-            ),
-          ],
+                IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: const Alignment(0, -0.2),
+                        radius: 1.3,
+                        colors: [
+                          ColorsManager.transparent,
+                          surfaceColor.withValues(alpha: 0.4),
+                          surfaceColor,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );

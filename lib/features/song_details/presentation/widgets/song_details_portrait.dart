@@ -13,14 +13,35 @@ class SongDetailsPortrait extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Spacer(flex: 2),
-        const SongArtwork(),
-        const Spacer(flex: 2),
-        SongDetailsGlassCard(song: song),
-        const Spacer(flex: 1),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final artworkWidth = (constraints.maxWidth * 0.78)
+            .clamp(0.0, 320.0)
+            .toDouble();
+
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.only(top: 12, bottom: 24),
+          child: Column(
+            children: [
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: artworkWidth,
+                  maxHeight: artworkWidth,
+                ),
+                child: const AspectRatio(
+                  aspectRatio: 1,
+                  child: SongArtwork(),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 18),
+                child: SongDetailsGlassCard(song: song),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

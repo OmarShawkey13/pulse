@@ -4,7 +4,12 @@ import 'package:pulse/core/utils/cubit/home/home_cubit.dart';
 import 'package:pulse/features/home/presentation/widgets/mini_player/mini_player_control_button.dart';
 
 class MiniPlayerControls extends StatelessWidget {
-  const MiniPlayerControls({super.key});
+  final bool isCompact;
+
+  const MiniPlayerControls({
+    super.key,
+    this.isCompact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,11 +24,12 @@ class MiniPlayerControls extends StatelessWidget {
           children: [
             MiniPlayerControlButton(
               icon: Icons.skip_previous_rounded,
+              size: isCompact ? 19 : 22,
               onPressed: cubit.playPrevious,
             ),
             MiniPlayerControlButton(
               icon: playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
-              size: 32,
+              size: isCompact ? 27 : 32,
               onPressed: () => playing
                   ? cubit.pauseSong()
                   : cubit.currentSongPath == null
@@ -32,6 +38,7 @@ class MiniPlayerControls extends StatelessWidget {
             ),
             MiniPlayerControlButton(
               icon: Icons.skip_next_rounded,
+              size: isCompact ? 19 : 22,
               onPressed: cubit.playNext,
             ),
           ],

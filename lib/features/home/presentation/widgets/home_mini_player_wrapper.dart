@@ -22,7 +22,9 @@ class HomeMiniPlayerWrapper extends StatelessWidget {
         return AnimatedOpacity(
           duration: const Duration(milliseconds: 400),
           opacity: 1.0,
-          child: MiniPlayer(onExpansionChanged: onExpansionChanged),
+          child: RepaintBoundary(
+            child: MiniPlayer(onExpansionChanged: onExpansionChanged),
+          ),
         );
       },
     );

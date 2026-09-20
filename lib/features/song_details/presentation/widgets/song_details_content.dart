@@ -18,8 +18,10 @@ class SongDetailsContent extends StatelessWidget {
 
         return BlocBuilder<HomeCubit, HomeStates>(
           buildWhen: (_, state) =>
+              state is HomePlayerPlayState ||
               state is HomePlayerNextState ||
               state is HomePlayerPreviousState ||
+              state is HomePlayerStopState ||
               state is HomeLoadSongsSuccessState,
           builder: (context, state) {
             final cubit = HomeCubit.get(context);

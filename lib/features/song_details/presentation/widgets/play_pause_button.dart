@@ -6,12 +6,14 @@ class PlayPauseButton extends StatelessWidget {
   final bool playing;
   final String songPath;
   final Color auraColor;
+  final double size;
 
   const PlayPauseButton({
     super.key,
     required this.playing,
     required this.songPath,
     required this.auraColor,
+    this.size = 72,
   });
 
   @override
@@ -23,21 +25,21 @@ class PlayPauseButton extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeOutCubic,
-        height: 72,
-        width: 72,
+        height: size,
+        width: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: auraColor,
           boxShadow: [
             BoxShadow(
               color: auraColor.withValues(alpha: 0.3),
-              blurRadius: 25,
-              spreadRadius: 4,
-              offset: const Offset(0, 8),
+              blurRadius: size * 0.35,
+              spreadRadius: size * 0.055,
+              offset: Offset(0, size * 0.11),
             ),
             BoxShadow(
               color: ColorsManager.white.withValues(alpha: 0.2),
-              blurRadius: 8,
+              blurRadius: size * 0.11,
               spreadRadius: -2,
               offset: const Offset(0, -4),
             ),
@@ -51,7 +53,7 @@ class PlayPauseButton extends StatelessWidget {
             child: Icon(
               playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
               key: ValueKey(playing),
-              size: 42,
+              size: size * 0.58,
               color: ColorsManager.white,
             ),
           ),

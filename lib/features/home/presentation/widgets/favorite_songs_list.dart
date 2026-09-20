@@ -13,11 +13,6 @@ class FavoriteSongsList extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeStates>(
       buildWhen: (_, state) =>
-          state is HomePlayerPlayState ||
-          state is HomePlayerPauseState ||
-          state is HomePlayerStopState ||
-          state is HomePlayerNextState ||
-          state is HomePlayerPreviousState ||
           state is HomeFavoritesLoadedState ||
           state is HomeFavoriteToggledState,
       builder: (context, state) {
